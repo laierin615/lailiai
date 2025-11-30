@@ -77,7 +77,7 @@ const App: React.FC = () => {
   };
 
   const submitGameData = (finalGameState: GameState, finalScores: ScoreState, finalAnswers: LevelAnswers) => {
-    // Updated URL
+    // Updated URL to the correct V1 deployment
     const url = "https://script.google.com/macros/s/AKfycbzEh4PPNpjGtplNksaBduNRtI0f8MfwKeigUkcr8Bc-dNG4Icmh7hNiSavuMSar6VCk6A/exec";
     
     // Calculate total score
