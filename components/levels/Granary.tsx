@@ -340,7 +340,7 @@ const Granary: React.FC<GranaryProps> = ({ onComplete, onFail, onSuccessMsg, onS
                     物理筆記
                 </h4>
                 <p className="text-slate-400 text-xs leading-relaxed">
-                    臨界條件：$\tan(\theta) > \mu_s$ (靜摩擦係數)。<br/>
+                    臨界條件：$\tan(\theta) &gt; \mu_s$ (靜摩擦係數)。<br/>
                     材質越滑 ($\mu_s$ 越小)，所需的角度 $\theta$ 就越小。<br/>
                     <span className="text-yellow-500/80">提示：鐵皮比木頭滑很多。</span>
                 </p>
@@ -378,3 +378,4 @@ const Granary: React.FC<GranaryProps> = ({ onComplete, onFail, onSuccessMsg, onS
 };
 
 export default Granary;
+    
