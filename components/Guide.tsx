@@ -12,74 +12,74 @@ const Guide: React.FC<GuideProps> = ({ onBack }) => {
   const stages = [
     {
       id: 1,
-      title: "主線任務 I：初始台地的呼喚 (報名啟程)",
+      title: "第一階段：報名與構想 (報名啟程)",
       period: "即日起 至 114年12月18日(四)",
-      desc: "勇者啊，冒險的起點就在腳下。在希卡塔關閉之前，你必須登錄你的小隊，並向海拉魯王國證明你的潛力。",
+      desc: "參賽者需於截止日前完成線上報名程序，並提交初步的研究構想。這是參與原住民雲端科展的第一步。",
       icon: "fingerprint",
       color: "text-sky-400",
       borderColor: "border-sky-500",
       bg: "bg-sky-900/30",
       tasks: [
-        "前往「線上報名神廟」完成登錄。",
-        "繳交「研究構想摘要」：這是你的滑翔傘。評審要在上百份文件中看見你的光芒，請務必精煉地說明研究的獨特性 (500字內)。",
-        "簽署「學生身分切結書」：確認勇者身分的契約。"
+        "至官網完成「線上報名」登錄。",
+        "繳交「研究構想摘要」：請清楚說明研究動機、目的與預期成果 (500字內)。",
+        "下載並簽署「學生身分切結書」，掃描後上傳。"
       ],
       loot: ["團隊基本資料表", "研究構想摘要", "學生身分切結書"]
     },
     {
       id: 2,
-      title: "主線任務 II：英傑的高峰修煉 (研習營)",
+      title: "第二階段：原民科學研習 (培力增能)",
       period: "114年12月 - 115年1月",
-      desc: "為了獲得對抗災厄的力量，所有小隊成員必須前往各地的「試煉神廟」進行修行，解鎖原民科學的奧義。",
+      desc: "通過初審的隊伍需參加分區實體研習營，學習科學研究方法、實驗設計與原住民族傳統智慧的結合。",
       icon: "school",
       color: "text-emerald-400",
       borderColor: "border-emerald-500",
       bg: "bg-emerald-900/30",
       subEvents: [
-        { title: "希卡石板線上傳輸", date: "115/1/31 前", loc: "官網觀看影片" },
-        { title: "實體試煉 (高中組)", date: "114/12/27-28", loc: "中區(臺中教大)、東區(東華)" },
-        { title: "實體試煉 (國中小-北中區)", date: "115/1/24-25", loc: "清華大學" },
-        { title: "實體試煉 (國中小-南區)", date: "115/1/24-25", loc: "屏東大學" },
-        { title: "實體試煉 (國中小-東區)", date: "115/1/26-27", loc: "東華大學" },
+        { title: "線上課程觀看", date: "115/1/31 前", loc: "官網教學專區" },
+        { title: "實體研習 (高中組)", date: "114/12/27-28", loc: "中區(臺中教大)、東區(東華)" },
+        { title: "實體研習 (國中小-北中區)", date: "115/1/24-25", loc: "清華大學" },
+        { title: "實體研習 (國中小-南區)", date: "115/1/24-25", loc: "屏東大學" },
+        { title: "實體研習 (國中小-東區)", date: "115/1/26-27", loc: "東華大學" },
       ],
       tasks: [
-        "全員強制參與：這是提升心心上限的唯一途徑！",
-        "繳交「簡要版研究計畫書」：研習結束後一週內，證明你已習得符文之力。",
-        "【導師特典】：參加實體試煉的旅費與住宿，將由王國經費全額資助！"
+        "團隊成員須全程參與研習活動。",
+        "研習結束後一週內，繳交「簡要版研究計畫書」。",
+        "【補助資訊】：參加實體研習之交通費與住宿費，由主辦單位提供補助。"
       ],
       loot: ["簡要版研究計畫書"]
     },
     {
       id: 3,
-      title: "主線任務 III：荒野的試煉 (研究製作)",
+      title: "第三階段：研究實作與紀錄 (雲端歷程)",
       period: "截止於 115年4月23日(四)",
-      desc: "這是最漫長的征途。你需要穿越迷霧森林，擊敗研究路上的怪物，並將過程記錄在「勇者軌跡」模式中。",
+      desc: "團隊依據計畫書進行實驗或田野調查，並於雲端平台持續記錄研究進度與成果。",
       icon: "construction",
       color: "text-amber-400",
       borderColor: "border-amber-500",
       bg: "bg-amber-900/30",
       tasks: [
-        "執行研究計畫：將構想化為現實。",
-        "開啟「勇者軌跡」：期間至少上傳 3 次研究週誌，讓高塔掌握你的行蹤。",
-        "煉製成果：將汗水結晶化為實體報告。"
+        "執行研究計畫：進行實驗數據收集或訪談。",
+        "雲端紀錄：期間至少上傳 3 次研究週誌 (含實驗照片或紀錄)。",
+        "成果繳交：提交完整研究成果報告書、3分鐘歷程短片及授權同意書。"
       ],
-      loot: ["研究成果報告書", "完整研究週誌 (含10張照片)", "3分鐘歷程回憶短片", "著作權授權同意書"]
+      loot: ["研究成果報告書", "研究週誌 (含照片)", "3分鐘歷程影片", "著作權授權書"]
     },
     {
       id: 4,
-      title: "最終決戰：災厄討伐 (實體科展)",
+      title: "第四階段：決賽與頒獎 (實體科展)",
       period: "暫訂 115年7月",
-      desc: "血月升起，決戰時刻！帶著你的神獸（研究成果）前往海拉魯城堡，面對最終的守護者（評審）。",
+      desc: "入選決賽之隊伍將受邀至現場進行成果展示與口頭發表，由評審團選出年度最佳原住民族科學研究。",
       icon: "trophy",
       color: "text-red-400",
       borderColor: "border-red-500",
       bg: "bg-red-900/30",
       tasks: [
-        "佈置展版：建立你的戰鬥據點。",
-        "10分鐘簡報：發動「英傑之詩」，講述你的傳奇。",
-        "12分鐘問答：防禦守護者的雷射鎖定，展現團隊默契。"
+        "成果展示：於決賽現場佈置研究海報與實體作品。",
+        "口頭發表：進行 10 分鐘的研究成果簡報。",
+        "評審問答：進行 12 分鐘的提問與回應。"
       ],
-      loot: ["展版海報", "實體作品", "無上的榮耀"]
+      loot: ["展版海報", "實體作品", "獎狀與獎金"]
     }
   ];
 
@@ -91,12 +91,12 @@ const Guide: React.FC<GuideProps> = ({ onBack }) => {
 
   return (
     <div className="animate-[fadeIn_0.5s_ease-out] min-h-[80vh] pb-12">
-      {/* Header with Search (Sheikah Slate Style) */}
+      {/* Header */}
       <div className="sticky top-20 z-40 bg-slate-900/95 backdrop-blur-sm border-b-2 border-amber-600/50 pb-4 mb-8">
         <div className="flex justify-between items-center mb-4">
             <h2 className="text-3xl font-bold text-amber-500 font-serif tracking-widest flex items-center gap-2">
                 <span className="material-symbols-outlined">auto_stories</span>
-                冒險筆記
+                參賽攻略
             </h2>
             <button 
                 onClick={onBack}
@@ -113,24 +113,21 @@ const Guide: React.FC<GuideProps> = ({ onBack }) => {
             <input 
                 type="text" 
                 className="block w-full pl-10 pr-3 py-3 border-2 border-slate-700 rounded-lg leading-5 bg-slate-800 text-amber-100 placeholder-slate-500 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 sm:text-sm font-mono transition-all shadow-[0_0_15px_rgba(245,158,11,0.1)]"
-                placeholder="檢索攻略關鍵字 (如: 報名, 研習, 報告...)"
+                placeholder="搜尋攻略 (如: 報名, 研習, 報告...)"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
             />
-            <div className="absolute inset-y-0 right-0 pr-3 flex items-center">
-                <span className="text-[10px] text-amber-500/30 uppercase tracking-widest font-bold">Sheikah Search</span>
-            </div>
         </div>
       </div>
 
-      {/* Quest List */}
+      {/* List */}
       <div className="space-y-6 max-w-4xl mx-auto">
         {filteredStages.map((stage) => (
             <div 
                 key={stage.id}
                 className={`border-2 rounded-xl overflow-hidden transition-all duration-300 ${activeStage === stage.id ? `${stage.borderColor} shadow-[0_0_20px_rgba(0,0,0,0.5)]` : 'border-slate-700 bg-slate-800/50 hover:border-slate-500'}`}
             >
-                {/* Quest Header */}
+                {/* Header */}
                 <div 
                     className={`p-6 cursor-pointer flex items-start gap-4 ${activeStage === stage.id ? stage.bg : ''}`}
                     onClick={() => setActiveStage(activeStage === stage.id ? null : stage.id)}
@@ -153,16 +150,15 @@ const Guide: React.FC<GuideProps> = ({ onBack }) => {
                     </span>
                 </div>
 
-                {/* Quest Details (Expanded) */}
+                {/* Details */}
                 {activeStage === stage.id && (
                     <div className="p-6 border-t border-slate-700 bg-slate-900/80 animate-[slideUp_0.3s_ease-out]">
                         
-                        {/* Sub Events (Specific for Stage 2) */}
                         {stage.subEvents && (
                             <div className="mb-6 bg-black/30 p-4 rounded-lg border border-slate-600">
                                 <h4 className="text-emerald-400 text-sm font-bold mb-3 flex items-center gap-2">
                                     <span className="material-symbols-outlined text-sm">location_on</span>
-                                    試煉神廟座標
+                                    研習場次資訊
                                 </h4>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
                                     {stage.subEvents.map((ev, idx) => (
@@ -179,11 +175,10 @@ const Guide: React.FC<GuideProps> = ({ onBack }) => {
                         )}
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                            {/* Tasks */}
                             <div>
                                 <h4 className={`text-sm font-bold uppercase tracking-widest mb-3 ${stage.color} flex items-center gap-2`}>
                                     <span className="material-symbols-outlined text-sm">checklist</span>
-                                    核心任務
+                                    階段任務
                                 </h4>
                                 <ul className="space-y-3">
                                     {stage.tasks.map((task, idx) => (
@@ -195,11 +190,10 @@ const Guide: React.FC<GuideProps> = ({ onBack }) => {
                                 </ul>
                             </div>
 
-                            {/* Loot/Docs */}
                             <div>
                                 <h4 className="text-sm font-bold uppercase tracking-widest mb-3 text-amber-500 flex items-center gap-2">
                                     <span className="material-symbols-outlined text-sm">folder_open</span>
-                                    關鍵道具 (需繳交)
+                                    應繳文件
                                 </h4>
                                 <div className="space-y-2">
                                     {stage.loot.map((item, idx) => (
@@ -215,13 +209,6 @@ const Guide: React.FC<GuideProps> = ({ onBack }) => {
                 )}
             </div>
         ))}
-
-        {filteredStages.length === 0 && (
-            <div className="text-center py-10 opacity-50">
-                <span className="material-symbols-outlined text-4xl mb-2">sentiment_dissatisfied</span>
-                <p>希卡感應器未偵測到相關任務...</p>
-            </div>
-        )}
       </div>
     </div>
   );

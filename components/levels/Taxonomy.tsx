@@ -7,6 +7,7 @@ interface TaxonomyProps {
   onFail: (msg: string) => void;
   onSuccessMsg: (msg: string) => void;
   onSaveAnswer: (ans: string) => void;
+  initialAnswer?: string;
 }
 
 type SubStage = 1 | 2 | 3;
@@ -32,7 +33,7 @@ const CORRECT_MAPPING: Record<PlantId, BasketId> = {
   bamboo: 'shelter'
 };
 
-const Taxonomy: React.FC<TaxonomyProps> = ({ onComplete, onFail, onSuccessMsg, onSaveAnswer }) => {
+const Taxonomy: React.FC<TaxonomyProps> = ({ onComplete, onFail, onSuccessMsg, onSaveAnswer, initialAnswer }) => {
   const [stage, setStage] = useState<SubStage>(1);
   const [showAnalysis, setShowAnalysis] = useState(false); // New state for showing analysis
   
@@ -44,6 +45,15 @@ const Taxonomy: React.FC<TaxonomyProps> = ({ onComplete, onFail, onSuccessMsg, o
   // Stage 3 State (AI/Research)
   const [topic, setTopic] = useState("");
   const [aiStatus, setAiStatus] = useState<'idle' | 'analyzing' | 'done'>('idle');
+
+  // Load previous answer if available
+  useEffect(() => {
+    if (initialAnswer) {
+      setTopic(initialAnswer);
+      setStage(3); // Jump directly to research topic stage
+      // We keep aiStatus as idle to allow editing and resubmitting
+    }
+  }, [initialAnswer]);
 
   // --- Stage 1 Logic ---
   const handleBasketClick = (bid: BasketId) => {
@@ -148,7 +158,7 @@ const Taxonomy: React.FC<TaxonomyProps> = ({ onComplete, onFail, onSuccessMsg, o
                  <div className="flex flex-wrap gap-2 justify-center z-10 w-full">
                    {baskets[bid].map(pid => (
                      <div key={pid} className="bg-slate-900 px-2 py-1 rounded text-[10px] border border-slate-600 animate-[slideUp_0.2s_ease-out] flex items-center gap-1 shadow-lg">
-                       <span className="material-symbols-outlined text-[10px] opacity-50">{PLANTS[pid].icon}</span>
+                       <span className="material-symbols-outlined text--[10px] opacity-50">{PLANTS[pid].icon}</span>
                        {PLANTS[pid].name}
                      </div>
                    ))}
@@ -251,7 +261,7 @@ const Taxonomy: React.FC<TaxonomyProps> = ({ onComplete, onFail, onSuccessMsg, o
                onChange={(e) => setTopic(e.target.value)}
                placeholder="輸入你的研究題目..."
                className="w-full bg-slate-900 border-2 border-slate-600 p-4 rounded-lg text-white focus:outline-none focus:border-cyan-500 transition-colors font-mono"
-               disabled={aiStatus !== 'idle'}
+               disabled={aiStatus === 'analyzing'}
              />
              {aiStatus === 'analyzing' && (
                <div className="absolute right-4 top-4 text-cyan-400 animate-pulse flex items-center gap-2">
@@ -263,12 +273,12 @@ const Taxonomy: React.FC<TaxonomyProps> = ({ onComplete, onFail, onSuccessMsg, o
 
           <button 
             onClick={analyzeTopic}
-            disabled={topic.length < 5 || aiStatus !== 'idle'}
+            disabled={topic.length < 5 || aiStatus === 'analyzing'}
             className={`mt-6 px-8 py-3 rounded font-bold transition-all
               ${aiStatus === 'done' ? 'bg-emerald-600 text-white' : topic.length >= 5 ? 'bg-cyan-700 hover:bg-cyan-600 text-white' : 'bg-slate-800 text-slate-600'}
             `}
           >
-            {aiStatus === 'idle' ? '提交希卡石板' : aiStatus === 'analyzing' ? '分析中...' : '題目通過驗證'}
+            {aiStatus === 'analyzing' ? '分析中...' : '提交希卡石板'}
           </button>
         </div>
       )}

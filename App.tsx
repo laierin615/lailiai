@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import Header from './components/Header';
 import Login from './components/Login';
@@ -6,11 +7,13 @@ import Guide from './components/Guide';
 import Prologue from './components/levels/Prologue';
 import Taxonomy from './components/levels/Taxonomy';
 import Trap from './components/levels/Trap';
-import Pharmacy from './components/levels/Pharmacy';
 import Granary from './components/levels/Granary';
 import Dye from './components/levels/Dye';
 import River from './components/levels/River';
+import Kuba from './components/levels/Kuba';
+import Rattan from './components/levels/Rattan';
 import Final from './components/levels/Final';
+
 import Modal from './components/ui/Modal';
 import EduModal from './components/ui/EduModal';
 import { EDU_DATA, INITIAL_GAME_STATE, ASSETS } from './constants';
@@ -74,7 +77,8 @@ const App: React.FC = () => {
   };
 
   const submitGameData = (finalGameState: GameState, finalScores: ScoreState, finalAnswers: LevelAnswers) => {
-    const url = "https://script.google.com/macros/s/AKfycbzRnc2oA36mAyOu1dJsQ8qAH6lWDh0OX6RjftugEOwkD6zPCGkoCMZHn2LYv9bftCyb5w/exec";
+    // Updated URL
+    const url = "https://script.google.com/macros/s/AKfycbzEh4PPNpjGtplNksaBduNRtI0f8MfwKeigUkcr8Bc-dNG4Icmh7hNiSavuMSar6VCk6A/exec";
     
     // Calculate total score
     const totalScore = (Object.values(finalScores) as number[]).reduce((a, b) => a + b, 0);
@@ -152,7 +156,8 @@ const App: React.FC = () => {
   const handleLevelComplete = (id: LevelId) => {
     let newScores = { ...scores };
     
-    if (id !== 'prologue') {
+    // Side levels (Kuba, Rattan) are not scored
+    if (id !== 'prologue' && id !== 'kuba' && id !== 'rattan') {
       if (!scores[id]) {
         newScores = { ...scores, [id]: calculateScore() };
         setScores(newScores);
@@ -174,15 +179,16 @@ const App: React.FC = () => {
   useEffect(() => {
     if (!modalState.isOpen && modalState.isSuccess && currentLevelId && !eduModalState.isOpen) {
       if (gameState[currentLevelId]) {
-        if (currentLevelId !== 'trap') {
+        // Special logic: Don't show edu modal for Trap or Final immediately if not desired
+        if (['trap', 'final'].includes(currentLevelId)) {
+            handleReturnToMap();
+        } else {
             setTimeout(() => {
             setEduModalState({
                 isOpen: true,
                 levelId: currentLevelId
             });
             }, 300);
-        } else {
-            handleReturnToMap();
         }
       }
     }
@@ -202,20 +208,27 @@ const App: React.FC = () => {
       onSuccessMsg: handleLevelSuccessMsg,
       onComplete: () => handleLevelComplete(currentLevelId as LevelId),
       onSaveAnswer: (ans: string) => handleSaveAnswer(currentLevelId as LevelId, ans),
+      initialAnswer: currentLevelId ? levelAnswers[currentLevelId] : undefined,
     };
 
     switch (currentLevelId) {
       case 'prologue': return <Prologue {...commonProps} />;
       case 'taxonomy': return <Taxonomy {...commonProps} />;
       case 'trap': return <Trap {...commonProps} />;
-      case 'pharmacy': return <Pharmacy {...commonProps} />;
       case 'granary': return <Granary {...commonProps} />;
       case 'dye': return <Dye {...commonProps} />;
       case 'river': return <River {...commonProps} />;
-      case 'final': return <Final {...commonProps} onComplete={() => {
-          handleLevelComplete('final');
-          handleLevelSuccessMsg("傳承解鎖！<br>科學是傳統的翻譯。恭喜你完成原科解密任務。");
-      }} />;
+      case 'kuba': return <Kuba {...commonProps} />;
+      case 'rattan': return <Rattan {...commonProps} />;
+      
+      case 'final': return <Final 
+          {...commonProps} 
+          levelAnswers={levelAnswers}
+          onComplete={() => {
+            handleLevelComplete('final');
+            handleLevelSuccessMsg("傳承解鎖！<br>研究構想書已生成。帶著這份智慧，去點燃真正的火種吧！");
+          }} 
+      />;
       default: return null;
     }
   };

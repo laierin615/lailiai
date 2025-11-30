@@ -3,10 +3,11 @@ export interface GameState {
   prologue: boolean;
   taxonomy: boolean;
   trap: boolean;
-  pharmacy: boolean;
   granary: boolean;
   dye: boolean;
   river: boolean;
+  kuba: boolean; // Side Level 1
+  rattan: boolean; // Side Level 2 (New)
   final: boolean;
 }
 

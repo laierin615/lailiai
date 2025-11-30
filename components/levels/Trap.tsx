@@ -8,6 +8,7 @@ interface TrapProps {
   onFail: (msg: string) => void;
   onSuccessMsg: (msg: string) => void;
   onSaveAnswer: (ans: string) => void;
+  initialAnswer?: string;
 }
 
 type RopeType = 'banana' | 'rattan';
@@ -21,7 +22,7 @@ interface AiSuggestion {
 
 // Custom Boar SVG Icon
 const BoarIcon = ({ className }: { className?: string }) => (
-  <svg viewBox="0 0 100 60" className={className} fill="currentColor" stroke="none">
+  <svg viewBox="0 0 100 60" className="w-full h-full" fill="currentColor" stroke="none">
     <path d="M 85 25 C 80 10 60 5 40 10 C 25 15 10 25 5 35 C 0 45 10 50 15 50 L 20 58 L 30 58 L 30 48 L 60 48 L 60 58 L 70 58 L 75 45 C 85 45 95 35 85 25 Z" />
     <path d="M 88 35 L 95 30" stroke="white" strokeWidth="3" strokeLinecap="round" />
     <circle cx="75" cy="22" r="2" fill="white" />
@@ -29,7 +30,7 @@ const BoarIcon = ({ className }: { className?: string }) => (
   </svg>
 );
 
-const Trap: React.FC<TrapProps> = ({ onComplete, onFail, onSuccessMsg, onSaveAnswer }) => {
+const Trap: React.FC<TrapProps> = ({ onComplete, onFail, onSuccessMsg, onSaveAnswer, initialAnswer }) => {
   const [phase, setPhase] = useState<Phase>('setup');
   
   // Simulation Vars
@@ -53,6 +54,30 @@ const Trap: React.FC<TrapProps> = ({ onComplete, onFail, onSuccessMsg, onSaveAns
 
   // Constants
   const targetAngle = -10 - ((height - 50) / 100) * 35; 
+
+  // Parse Initial Answer if available
+  useEffect(() => {
+    if (initialAnswer) {
+      // Try to parse structured format first
+      const topicMatch = initialAnswer.match(/Topic: (.*?) \|/);
+      const indepMatch = initialAnswer.match(/IV: (.*?) \|/);
+      const depMatch = initialAnswer.match(/DV: (.*?) \|/);
+      const controlMatch = initialAnswer.match(/CV: (.*)/);
+
+      if (topicMatch) setResearchTopic(topicMatch[1]);
+      if (indepMatch) setIndependentVar(indepMatch[1]);
+      if (depMatch) setDependentVar(depMatch[1]);
+      if (controlMatch) setControlVar(controlMatch[1]);
+
+      // Legacy format fallback (if needed)
+      if (!topicMatch) {
+          const legacyTopic = initialAnswer.match(/Topic: (.*?),/);
+          if (legacyTopic) setResearchTopic(legacyTopic[1]);
+      }
+
+      setPhase('task');
+    }
+  }, [initialAnswer]);
 
   useEffect(() => {
     if (phase === 'setup') {
@@ -193,8 +218,10 @@ const Trap: React.FC<TrapProps> = ({ onComplete, onFail, onSuccessMsg, onSaveAns
 
   const submitTask = () => {
     if (independentVar && dependentVar && controlVar) {
-      onSaveAnswer(`Topic: ${researchTopic || 'Default'}, Independent: ${independentVar}, Dependent: ${dependentVar}, Control: ${controlVar}`);
-      onSuccessMsg("實驗設計已登錄！<br>你成功將傳統智慧轉化為科學語言。");
+      // Save in a clear, structured format using pipes | for separation
+      const structuredAnswer = `Topic: ${researchTopic || 'Default'} | IV: ${independentVar} | DV: ${dependentVar} | CV: ${controlVar}`;
+      onSaveAnswer(structuredAnswer);
+      onSuccessMsg("實驗設計已登錄！<br>你成功將傳統智慧轉化為科學語言。<br>此數據將同步至希卡塔(Final Level)。");
       onComplete();
     } else {
       onFail("請完整填寫所有變因欄位。");
@@ -311,7 +338,7 @@ const Trap: React.FC<TrapProps> = ({ onComplete, onFail, onSuccessMsg, onSaveAns
           {/* Visual Simulation (Right Side - 2/3) */}
           <div className="lg:col-span-2 bg-black rounded-xl border-4 border-slate-800 relative h-[500px] overflow-hidden group shadow-2xl order-1 lg:order-2">
             
-            {/* --- VISUAL CONTENT (Setup/Sim) --- */}
+            {/* ... (Visual code remains same) ... */}
             {/* Background Layer */}
             <div className="absolute inset-0 bg-[url('https://upload.wikimedia.org/wikipedia/commons/thumb/4/4c/Haeckel_Filicinae_4.jpg/640px-Haeckel_Filicinae_4.jpg')] bg-cover opacity-30 mix-blend-overlay"></div>
             <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-transparent to-black/80"></div>
@@ -364,8 +391,8 @@ const Trap: React.FC<TrapProps> = ({ onComplete, onFail, onSuccessMsg, onSaveAns
                     filter: phase === 'diagram' ? 'grayscale(100%) brightness(50%)' : 'drop-shadow(0 4px 6px rgba(0,0,0,0.5))'
                 }}
             >
-                <div className="relative">
-                    <BoarIcon className="w-24 h-16 text-stone-300" />
+                <div className="relative w-24 h-16">
+                    <BoarIcon className="text-stone-300" />
                     {(phase === 'diagram' || statusText.includes('斷') || statusText.includes('逃')) && (
                         <div className="absolute -top-8 left-1/2 -translate-x-1/2 text-red-500 font-bold text-2xl animate-bounce">!</div>
                     )}
@@ -513,7 +540,7 @@ const Trap: React.FC<TrapProps> = ({ onComplete, onFail, onSuccessMsg, onSaveAns
                 </div>
             </div>
 
-            {/* AI Suggestion Dialog Overlay */}
+            {/* AI Suggestion Dialog Overlay (remains same) */}
             {aiSuggestion && (
                 <div className="absolute inset-0 z-20 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-[fadeIn_0.2s_ease-out] rounded-xl">
                     <div className="bg-slate-900 border-2 border-cyan-500 rounded-xl p-6 w-full max-w-md shadow-[0_0_30px_rgba(6,182,212,0.3)] relative">

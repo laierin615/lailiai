@@ -7,11 +7,11 @@ import Guide from './components/Guide';
 import Prologue from './components/levels/Prologue';
 import Taxonomy from './components/levels/Taxonomy';
 import Trap from './components/levels/Trap';
-import Pharmacy from './components/levels/Pharmacy';
 import Granary from './components/levels/Granary';
 import Dye from './components/levels/Dye';
 import River from './components/levels/River';
 import Final from './components/levels/Final';
+
 import Modal from './components/ui/Modal';
 import EduModal from './components/ui/EduModal';
 import { EDU_DATA, INITIAL_GAME_STATE, ASSETS } from './constants';
@@ -175,15 +175,16 @@ const App: React.FC = () => {
   useEffect(() => {
     if (!modalState.isOpen && modalState.isSuccess && currentLevelId && !eduModalState.isOpen) {
       if (gameState[currentLevelId]) {
-        if (currentLevelId !== 'trap') {
+        // Special logic: Don't show edu modal for Trap or Final immediately if not desired
+        if (['trap', 'final'].includes(currentLevelId)) {
+            handleReturnToMap();
+        } else {
             setTimeout(() => {
             setEduModalState({
                 isOpen: true,
                 levelId: currentLevelId
             });
             }, 300);
-        } else {
-            handleReturnToMap();
         }
       }
     }
@@ -209,14 +210,18 @@ const App: React.FC = () => {
       case 'prologue': return <Prologue {...commonProps} />;
       case 'taxonomy': return <Taxonomy {...commonProps} />;
       case 'trap': return <Trap {...commonProps} />;
-      case 'pharmacy': return <Pharmacy {...commonProps} />;
       case 'granary': return <Granary {...commonProps} />;
       case 'dye': return <Dye {...commonProps} />;
       case 'river': return <River {...commonProps} />;
-      case 'final': return <Final {...commonProps} onComplete={() => {
-          handleLevelComplete('final');
-          handleLevelSuccessMsg("傳承解鎖！<br>科學是傳統的翻譯。恭喜你完成原科解密任務。");
-      }} />;
+      
+      case 'final': return <Final 
+          {...commonProps} 
+          levelAnswers={levelAnswers}
+          onComplete={() => {
+            handleLevelComplete('final');
+            handleLevelSuccessMsg("傳承解鎖！<br>研究構想書已生成。帶著這份智慧，去點燃真正的火種吧！");
+          }} 
+      />;
       default: return null;
     }
   };

@@ -35,10 +35,6 @@ export const ASSETS = {
     // 野豬 (Sus scrofa)
     boar: "https://upload.wikimedia.org/wikipedia/commons/thumb/9/93/Sus_scrofa_scrofa.jpg/640px-Sus_scrofa_scrofa.jpg",
   },
-  pharmacy: {
-    // 研磨缽
-    mortar: "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a4/Mortar_and_pestle_03.jpg/640px-Mortar_and_pestle_03.jpg",
-  },
   dye: {
     // 銅鍋/陶鍋
     pot: "https://upload.wikimedia.org/wikipedia/commons/thumb/3/36/Bronze_Cauldron.jpg/640px-Bronze_Cauldron.jpg",
@@ -50,6 +46,14 @@ export const ASSETS = {
   river: {
     // 河邊洗衣古圖
     washing: "https://upload.wikimedia.org/wikipedia/commons/thumb/1/13/The_Washing_Place_at_Greze_MET_DP123849.jpg/800px-The_Washing_Place_at_Greze_MET_DP123849.jpg",
+  },
+  kuba: {
+    // 庫巴 (Kuba) 建築
+    hut: "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a2/Rice_granary_of_the_Ifugao_people.jpg/640px-Rice_granary_of_the_Ifugao_people.jpg",
+  },
+  rattan: {
+    // 黃藤
+    rattan_img: "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d7/Calamus_rotang_-_Köhler–s_Medizinal-Pflanzen-024.jpg/480px-Calamus_rotang_-_Köhler–s_Medizinal-Pflanzen-024.jpg",
   },
   final: {
     // 火炬手
@@ -70,10 +74,6 @@ export const EDU_DATA: Record<LevelId, EduData> = {
     title: "《MKBB_2.0_Rangay-致命的衝擊力》",
     text: "本關卡源自泰雅族重壓陷阱研究。獵人懂得調整<b>「石頭重量 (m)」</b>與<b>「架設高度 (h)」</b>來控制衝擊力。<br><br>這完美體現了物理學中<b>重力位能轉動能 (Ug = mgh)</b> 的應用。同時，<b>繩索材料</b>的選擇（如黃藤的強韌vs月桃/香蕉的脆斷）也是關鍵變因。學生透過實驗數據，找出了能壓制獵物卻不至於破壞陷阱結構的最佳參數。"
   },
-  pharmacy: {
-    title: "《布農族石菖蒲運用探討》",
-    text: "耆老堅持「用酒」處理石菖蒲，在化學上即是利用<b>「有機溶劑萃取」</b>原理。石菖蒲中的有效成分（如 α-细辛醚）是脂溶性的，難溶於水。<br><br>科展學生透過<b>「抑菌圈實驗」</b>證實：酒精萃取液的抗菌效果遠優於水煮液，科學地驗證了祖先的智慧。"
-  },
   granary: {
     title: "《穀倉科學，建築泰雅》",
     text: "防鼠板 (Tku) 的設計是物理學<b>「靜摩擦力與斜面」</b>的經典應用。角度過小，摩擦力大，老鼠易爬；角度過大（陡峭），正向力減小，老鼠會滑落。<br><br>學生製作模型模擬老鼠攀爬，計算出<b>「臨界角度」</b>，證明了傳統建築構件背後精密的力學考量。"
@@ -86,6 +86,14 @@ export const EDU_DATA: Record<LevelId, EduData> = {
     title: "《walo’科研社》&《Klapay》",
     text: "清潔力不等於泡沫多寡。本關卡展示了科展中最重要的精神：<b>「定義變因」</b>。學生利用影像軟體分析洗滌後的<b>「油漬殘留面積」</b>，或是測量水溶液的<b>「表面張力」</b>。<br><br>這將主觀的「洗得很乾淨」轉化為客觀的<b>「量化數據」</b>，是科學探究的基礎。"
   },
+  kuba: {
+    title: "《庫巴的試煉：會呼吸的建築》",
+    text: "本關卡探討了鄒族男子會所 (Kuba) 的科學智慧。<br><br>1. <b>選材科學</b>：五節芒 (Haingu) 葉背厚實的蠟質層是天然的疏水塗層，能防止雨水滲透。<br>2. <b>熱物理 (Smofu)</b>：室內火塘不僅是儀式中心，更是「除濕機」。利用熱對流降低相對濕度，並讓煙燻物質（酚類）附著在茅草上，達到防腐防蟲的效果。"
+  },
+  rattan: {
+    title: "《究極傳說：黃藤之絆》",
+    text: "本關卡結合了結構力學與材料科學。<br><br>1. <b>材料科學 (木質化)</b>：黃藤經過多年的生長與日曬，纖維會逐漸「木質化 (Lignification)」，使其抗拉強度與耐磨性大幅提升。<br>2. <b>結構力學 (摩擦力)</b>：不同的繩結 (Knot) 會改變接觸面積。複雜的結（如十字、八字）能增加繩索與木頭間的摩擦力，分散受力，防止建築在強風地震中解體。"
+  },
   final: {
     title: "《傳承之火》",
     text: "科學不是用來否定傳統，而是翻譯傳統。當我們能用科學語言解釋祖先的智慧，文化就有了新的生命力。<br><br>恭喜你，引路人。你已經掌握了「變因」，現在去點燃更多孩子心中的火種吧。"
@@ -96,9 +104,10 @@ export const INITIAL_GAME_STATE: GameState = {
   prologue: false,
   taxonomy: false,
   trap: false,
-  pharmacy: false,
   granary: false,
   dye: false,
   river: false,
+  kuba: false,
+  rattan: false,
   final: false,
 };
