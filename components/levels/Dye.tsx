@@ -232,9 +232,9 @@ const Dye: React.FC<DyeProps> = ({ onComplete, onFail, onSuccessMsg, onSaveAnswe
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-8">
         
         {/* Left: The Pot */}
-        <div className="relative flex flex-col items-center justify-center min-h-[300px] bg-slate-900 rounded-xl border-2 border-pink-900/50 shadow-[0_0_30px_rgba(236,72,153,0.1)]">
+        <div className="relative flex flex-col items-center justify-center min-h-[380px] bg-slate-900 rounded-xl border-2 border-pink-900/50 shadow-[0_0_30px_rgba(236,72,153,0.1)]">
             {/* Fire */}
-            <div className="absolute bottom-10 animate-pulse text-orange-500 opacity-80">
+            <div className="absolute bottom-24 animate-pulse text-orange-500 opacity-80">
                 <span className="material-symbols-outlined text-6xl">local_fire_department</span>
             </div>
             {/* Pot */}
@@ -260,7 +260,7 @@ const Dye: React.FC<DyeProps> = ({ onComplete, onFail, onSuccessMsg, onSaveAnswe
                 <div className="bg-black/60 text-slate-200 text-xs py-2 px-4 rounded border border-slate-700 backdrop-blur-sm" dangerouslySetInnerHTML={{__html: message}}></div>
             </div>
             
-            <div className="absolute bottom-4 flex gap-4">
+            <div className="absolute bottom-6 flex gap-4">
                 <button onClick={clearPot} className="px-4 py-1 text-xs text-red-400 hover:bg-red-900/30 rounded border border-red-900/50">清空</button>
                 <button 
                     onClick={cook} 
@@ -312,3 +312,4 @@ const Dye: React.FC<DyeProps> = ({ onComplete, onFail, onSuccessMsg, onSaveAnswe
 };
 
 export default Dye;
+    

@@ -49,9 +49,15 @@ const Taxonomy: React.FC<TaxonomyProps> = ({ onComplete, onFail, onSuccessMsg, o
   // Load previous answer if available
   useEffect(() => {
     if (initialAnswer) {
-      setTopic(initialAnswer);
-      setStage(3); // Jump directly to research topic stage
-      // We keep aiStatus as idle to allow editing and resubmitting
+      // Check if the answer is from Granary (starts with "Material:")
+      // If it is, we treat it as completing stage 2, but we DO NOT populate the topic.
+      if (initialAnswer.startsWith("Material:")) {
+         setTopic(""); // Clear topic so placeholder shows
+         setStage(3);
+      } else {
+         setTopic(initialAnswer);
+         setStage(3); // Jump directly to research topic stage
+      }
     }
   }, [initialAnswer]);
 
@@ -71,7 +77,7 @@ const Taxonomy: React.FC<TaxonomyProps> = ({ onComplete, onFail, onSuccessMsg, o
         
         // Provide plant-specific feedback for better clarity
         if (selectedCard === 'crape') {
-            hint = "九芎 (Crape Myrtle) 的枝幹非常強韌且富有彈性，是製作陷阱機關（如吊索）的上等材料，且<strong class='text-emerald-400'>沒有毒性</strong>。";
+            hint = "九芎 (Crape Myrtle) 的枝幹非常強韌且富有彈性，是製作陷阱機關（如吊索）的上等材料。";
         } else if (selectedCard === 'derris') {
             hint = "魚藤 (Derris) 的根部含有魚藤酮，具有毒性，是被動式的『化學陷阱』，用來麻醉魚類。";
         } else {
@@ -158,7 +164,7 @@ const Taxonomy: React.FC<TaxonomyProps> = ({ onComplete, onFail, onSuccessMsg, o
                  <div className="flex flex-wrap gap-2 justify-center z-10 w-full">
                    {baskets[bid].map(pid => (
                      <div key={pid} className="bg-slate-900 px-2 py-1 rounded text-[10px] border border-slate-600 animate-[slideUp_0.2s_ease-out] flex items-center gap-1 shadow-lg">
-                       <span className="material-symbols-outlined text--[10px] opacity-50">{PLANTS[pid].icon}</span>
+                       <span className="material-symbols-outlined text-[10px] opacity-50">{PLANTS[pid].icon}</span>
                        {PLANTS[pid].name}
                      </div>
                    ))}
@@ -187,7 +193,7 @@ const Taxonomy: React.FC<TaxonomyProps> = ({ onComplete, onFail, onSuccessMsg, o
                         <span className="material-symbols-outlined text-3xl text-slate-400">{PLANTS[pid].icon}</span>
                     </div>
                     <span className="text-xs font-bold text-slate-300">{PLANTS[pid].name}</span>
-                    <span className="text-[9px] text-slate-500">{PLANTS[pid].desc}</span>
+                    <span className="text-xs text-slate-500 scale-90">{PLANTS[pid].desc}</span>
                     </button>
                 ))}
                 </div>
@@ -259,8 +265,8 @@ const Taxonomy: React.FC<TaxonomyProps> = ({ onComplete, onFail, onSuccessMsg, o
                type="text" 
                value={topic}
                onChange={(e) => setTopic(e.target.value)}
-               placeholder="輸入你的研究題目..."
-               className="w-full bg-slate-900 border-2 border-slate-600 p-4 rounded-lg text-white focus:outline-none focus:border-cyan-500 transition-colors font-mono"
+               placeholder="例如：探討石板屋的熱對流與隔熱效果..."
+               className="w-full bg-slate-900 border-2 border-slate-600 p-4 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500 transition-colors font-mono"
                disabled={aiStatus === 'analyzing'}
              />
              {aiStatus === 'analyzing' && (

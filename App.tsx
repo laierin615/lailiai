@@ -261,7 +261,7 @@ const App: React.FC = () => {
           <div className="relative min-h-[60vh] animate-[fadeIn_0.5s_ease-out]">
             <button 
               onClick={handleReturnToMap}
-              className="absolute top-0 right-0 z-40 text-slate-400 hover:text-white flex items-center gap-1 text-sm bg-slate-800/80 px-3 py-1 rounded-full border border-slate-600 hover:bg-slate-700 transition-colors"
+              className="absolute top-0 left-0 z-40 text-slate-400 hover:text-white flex items-center gap-1 text-sm bg-slate-800/80 px-3 py-1 rounded-full border border-slate-600 hover:bg-slate-700 transition-colors"
             >
               <span className="material-symbols-outlined text-sm">map</span> 地圖
             </button>

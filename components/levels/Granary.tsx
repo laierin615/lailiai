@@ -11,34 +11,31 @@ interface GranaryProps {
 
 type MaterialType = 'wood' | 'slate' | 'metal';
 
-const MATERIALS: Record<MaterialType, { name: string; frictionDesc: string; criticalAngle: number; style: string; border: string; shadow: string }> = {
+const MATERIALS: Record<MaterialType, { name: string; frictionDesc: string; criticalAngle: number; texture: string; color: string }> = {
   wood: { 
-    name: '木材 (Wood)', 
-    frictionDesc: '高 (High Friction)', 
-    criticalAngle: 60, 
-    style: 'bg-amber-600', 
-    border: 'border-amber-800',
-    shadow: 'shadow-amber-900/50'
+    name: '粗糙木材 (Wood)', 
+    frictionDesc: '高摩擦力 (High Friction)', 
+    criticalAngle: 65, 
+    texture: 'repeating-linear-gradient(45deg, #78350f 0px, #92400e 10px)',
+    color: 'bg-amber-800'
   },
   slate: { 
-    name: '石板 (Slate)', 
-    frictionDesc: '中 (Medium Friction)', 
-    criticalAngle: 50, 
-    style: 'bg-slate-500', 
-    border: 'border-slate-700',
-    shadow: 'shadow-slate-900/50'
+    name: '磨光石板 (Slate)', 
+    frictionDesc: '中摩擦力 (Medium Friction)', 
+    criticalAngle: 45, 
+    texture: 'repeating-linear-gradient(90deg, #475569 0px, #64748b 20px)',
+    color: 'bg-slate-600'
   },
   metal: { 
-    name: '鐵皮 (Metal)', 
-    frictionDesc: '低 (Low Friction)', 
-    criticalAngle: 40, 
-    style: 'bg-gray-300', 
-    border: 'border-gray-500',
-    shadow: 'shadow-white/20'
+    name: '光滑鐵皮 (Metal)', 
+    frictionDesc: '低摩擦力 (Low Friction)', 
+    criticalAngle: 30, 
+    texture: 'linear-gradient(135deg, #d1d5db 0%, #9ca3af 100%)',
+    color: 'bg-gray-300'
   }
 };
 
-// Procedural Sound Generator to avoid external assets
+// Procedural Sound Generator
 const playSound = (type: 'ratchet' | 'squeak' | 'slip' | 'climb') => {
   try {
     const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
@@ -53,7 +50,6 @@ const playSound = (type: 'ratchet' | 'squeak' | 'slip' | 'climb') => {
     const now = ctx.currentTime;
 
     if (type === 'ratchet') {
-      // Mechanical Click for Slider
       osc.type = 'square';
       osc.frequency.setValueAtTime(150, now);
       osc.frequency.exponentialRampToValueAtTime(40, now + 0.05);
@@ -62,17 +58,14 @@ const playSound = (type: 'ratchet' | 'squeak' | 'slip' | 'climb') => {
       osc.start(now);
       osc.stop(now + 0.05);
     } else if (type === 'squeak') {
-      // Rat Squeak
       osc.type = 'triangle';
       osc.frequency.setValueAtTime(800, now);
       osc.frequency.linearRampToValueAtTime(1500, now + 0.1);
-      osc.frequency.linearRampToValueAtTime(800, now + 0.2);
       gain.gain.setValueAtTime(0.1, now);
       gain.gain.linearRampToValueAtTime(0.001, now + 0.4);
       osc.start(now);
       osc.stop(now + 0.4);
     } else if (type === 'slip') {
-      // Sliding down sound
       osc.type = 'sawtooth';
       osc.frequency.setValueAtTime(300, now);
       osc.frequency.linearRampToValueAtTime(100, now + 0.5);
@@ -81,7 +74,6 @@ const playSound = (type: 'ratchet' | 'squeak' | 'slip' | 'climb') => {
       osc.start(now);
       osc.stop(now + 0.5);
     } else if (type === 'climb') {
-      // Scuttling sound (noise burst simulated)
       osc.type = 'square';
       osc.frequency.setValueAtTime(400, now);
       gain.gain.setValueAtTime(0.02, now);
@@ -95,20 +87,18 @@ const playSound = (type: 'ratchet' | 'squeak' | 'slip' | 'climb') => {
 };
 
 const Granary: React.FC<GranaryProps> = ({ onComplete, onFail, onSuccessMsg, onSaveAnswer }) => {
-  const [angle, setAngle] = useState(15); // Initial angle (degrees)
+  const [angle, setAngle] = useState(20); // Initial angle
   const [material, setMaterial] = useState<MaterialType>('wood');
   const [isSimulating, setIsSimulating] = useState(false);
-  const [ratPosition, setRatPosition] = useState(0); // 0: bottom, 100: top of guard
-  const [ratStatus, setRatStatus] = useState<'idle' | 'climbing' | 'slipped' | 'success'>('idle');
-  const [feedback, setFeedback] = useState("請選擇材質並調整角度。");
+  const [ratProgress, setRatProgress] = useState(0); 
+  const [ratStatus, setRatStatus] = useState<'idle' | 'climbing' | 'hanging' | 'slipped' | 'success'>('idle');
+  const [feedback, setFeedback] = useState("請調整防鼠板的角度與材質。");
   
-  // Ref for sound throttling
   const lastSoundTime = useRef(0);
 
-  // Reset simulation when angle/material changes
   useEffect(() => {
     if (!isSimulating) {
-      setRatPosition(0);
+      setRatProgress(0);
       setRatStatus('idle');
       setFeedback("準備測試...");
     }
@@ -119,7 +109,6 @@ const Granary: React.FC<GranaryProps> = ({ onComplete, onFail, onSuccessMsg, onS
     const newAngle = parseInt(e.target.value);
     setAngle(newAngle);
     
-    // Throttle sound effect to avoid spamming
     const now = Date.now();
     if (now - lastSoundTime.current > 50) {
         playSound('ratchet');
@@ -131,69 +120,69 @@ const Granary: React.FC<GranaryProps> = ({ onComplete, onFail, onSuccessMsg, onS
     if (isSimulating) return;
     setIsSimulating(true);
     setRatStatus('climbing');
-    setFeedback("老鼠正在嘗試攀爬...");
+    setFeedback("老鼠開始攀爬支柱...");
     playSound('squeak');
 
-    // Animation Logic
-    let progress = 0;
-    let stepCount = 0;
-    
+    let p = 0;
     const interval = setInterval(() => {
-      progress += 2;
-      stepCount++;
-      setRatPosition(progress);
+      p += 1.5;
+      setRatProgress(p);
       
-      // Play scuttling sound occasionally
-      if (stepCount % 5 === 0) playSound('climb');
-
-      // Reached the critical point (under the guard)
-      if (progress >= 75) { // Adjusted threshold for visual alignment
-        clearInterval(interval);
-        evaluateOutcome();
+      // Phase 1: Climbing the vertical pole (0-50%)
+      if (p < 50) {
+         if (Math.floor(p) % 10 === 0) playSound('climb');
+      } 
+      // Phase 2: Reaching the Yulu (Rat Guard) (50-60%)
+      else if (p >= 50 && p < 60) {
+         setRatStatus('hanging');
+         setFeedback("老鼠遭遇防鼠板 (Yulu)，嘗試倒掛突破...");
       }
-    }, 40);
+      // Phase 3: Evaluation Point (60%)
+      else if (p >= 60) {
+         clearInterval(interval);
+         evaluateOutcome();
+      }
+    }, 30);
   };
 
   const evaluateOutcome = () => {
-    // Physics Logic based on Science Fair Report:
-    // Condition for slipping: tan(theta) > static_friction_coefficient (mu)
-    // We map this to critical angles.
     const critical = MATERIALS[material].criticalAngle;
+    
+    // Outcome Logic: 
+    // If the board is steep enough (angle > critical), gravity overcomes friction -> Rat slips.
     
     setTimeout(() => {
       if (angle >= critical) {
-        // Success: Rat slips
         setRatStatus('slipped');
         playSound('slip');
-        setFeedback(`防禦成功！${MATERIALS[material].name} 表面較滑，${angle}° 足以讓老鼠滑落！`);
-        setTimeout(() => {
-            onSaveAnswer(`Material: ${material}, Critical Angle: ${critical}, User Angle: ${angle}`);
-            onSuccessMsg(`<b>防鼠板 (Yulu) 測試成功！</b><br>
-            你發現了材質與角度的關係：<br>
-            表面越光滑（摩擦係數 $\\mu$ 越小），所需的臨界角度就越小。<br>
-            泰雅族傳統使用木材，因此需要較大的角度 (約60°)。`);
-            onComplete();
-        }, 1500);
-      } else {
-        // Fail: Rat climbs over
-        setRatStatus('success'); // Rat success = Player fail
-        playSound('squeak');
+        setFeedback(`防禦成功！${MATERIALS[material].name} 表面太滑，且角度(${angle}°)夠陡，老鼠抓不住！`);
         
+        setTimeout(() => {
+            onSaveAnswer(`Material: ${material}, Critical: ${critical}, Angle: ${angle}`);
+            onSuccessMsg(`<b>防鼠板 (Yulu) 驗證成功！</b><br>
+            你發現了原住民的科學智慧：<br>
+            1. <b>材質影響摩擦力</b>：越光滑的表面(如石板)，需要的角度越小。<br>
+            2. <b>斜面分力</b>：當角度超過「臨界角」，重力分量 > 最大靜摩擦力，老鼠就會滑落。`);
+            onComplete();
+        }, 2000);
+      } else {
+        setRatStatus('success');
+        playSound('squeak');
         let msg = "";
-        if (angle < critical - 20) msg = "失敗！角度太過平緩，老鼠輕鬆爬過。";
-        else msg = `失敗！對於 ${MATERIALS[material].name} 來說，這個角度還不夠陡。`;
+        if (material === 'wood') msg = "失敗！木頭表面太粗糙，老鼠指甲能輕易勾住，需要更陡的角度！";
+        else msg = `失敗！角度 ${angle}° 太過平緩，老鼠利用核心肌群撐過去了！`;
         
         setFeedback(msg);
         setTimeout(() => {
             onFail(msg);
             setIsSimulating(false);
-        }, 1500);
+        }, 2000);
       }
     }, 500);
   };
 
   return (
-    <div className="space-y-6 max-w-4xl mx-auto">
+    <div className="space-y-6 max-w-5xl mx-auto">
       <div className="text-center">
         <h2 className="text-3xl font-bold text-yellow-400 font-serif tracking-widest flex items-center justify-center gap-3">
           <span className="material-symbols-outlined text-4xl">home_work</span>
@@ -202,172 +191,204 @@ const Granary: React.FC<GranaryProps> = ({ onComplete, onFail, onSuccessMsg, onS
         <p className="text-yellow-500/60 text-xs uppercase tracking-[0.3em] mt-2">The Physics of Yulu</p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         
-        {/* Simulation View */}
-        <div className="bg-slate-900 border-2 border-yellow-900/50 rounded-xl relative h-[400px] overflow-hidden shadow-2xl group select-none">
-            {/* Background Grid for Blueprint effect */}
-            <div className="absolute inset-0 opacity-20 bg-[linear-gradient(#fbbf24_1px,transparent_1px),linear-gradient(90deg,#fbbf24_1px,transparent_1px)] bg-[size:40px_40px]"></div>
+        {/* --- SIMULATION VIEW --- */}
+        <div className="bg-slate-900 border-4 border-slate-700 rounded-xl relative h-[450px] overflow-hidden shadow-2xl group select-none">
+            {/* Background: Blueprint Grid + Sky */}
+            <div className="absolute inset-0 bg-slate-950">
+                 <div className="absolute inset-0 opacity-10 bg-[linear-gradient(#fbbf24_1px,transparent_1px),linear-gradient(90deg,#fbbf24_1px,transparent_1px)] bg-[size:40px_40px]"></div>
+            </div>
             
-            <div className="absolute inset-0 flex flex-col items-center justify-end pb-10">
+            <div className="absolute inset-0 flex flex-col items-center justify-end pb-0">
                 
-                {/* Granary House (Top) */}
-                <div className="w-64 h-32 bg-slate-800 border-2 border-yellow-700/50 rounded-lg mb-0 relative z-20 flex items-center justify-center shadow-lg">
-                    <div className="text-center">
-                        <span className="text-yellow-500/50 font-bold text-2xl uppercase tracking-widest block">Khu</span>
-                        <span className="text-[10px] text-slate-500">FOOD STORAGE</span>
+                {/* 1. The Granary (Khu) - Top Section */}
+                <div className="relative z-30 mb-[-10px] transform hover:scale-[1.02] transition-transform">
+                    {/* Roof (Thatched Style) */}
+                    <div className="w-64 h-24 bg-gradient-to-b from-yellow-900 to-yellow-800 rounded-t-[3rem] relative overflow-hidden shadow-lg border-b-4 border-yellow-950">
+                        {/* Thatch Texture */}
+                        <div className="absolute inset-0 opacity-30 bg-[repeating-linear-gradient(90deg,transparent,transparent_4px,#000_5px)]"></div>
+                        <div className="absolute top-2 left-1/2 -translate-x-1/2 w-48 h-2 bg-black/20 rounded-full"></div>
                     </div>
-                    {/* Food inside */}
-                    <div className="absolute w-full h-1 bottom-0 bg-yellow-900/50"></div>
+                    {/* Main Body (Bamboo/Wood Slats) */}
+                    <div className="w-56 h-32 mx-auto bg-amber-900 relative border-x-4 border-amber-950 flex items-center justify-center">
+                        {/* Slats Texture */}
+                        <div className="absolute inset-0 bg-[repeating-linear-gradient(0deg,#78350f, #78350f_10px, #451a03_12px)] opacity-80"></div>
+                        {/* Door */}
+                        <div className="w-16 h-24 bg-black/40 border-2 border-amber-700 relative z-10 flex items-center justify-center">
+                             <div className="w-2 h-2 rounded-full bg-amber-500 shadow-lg ml-8"></div>
+                        </div>
+                    </div>
+                    {/* Floor Base (Visible part of the floor) */}
+                    <div className="w-72 h-4 bg-stone-800 mx-auto rounded-full shadow-xl relative z-30"></div>
                 </div>
 
-                {/* The Rat Guard (Yulu) - Dynamic Angle & Material */}
-                <div className="relative z-10 w-full flex justify-center h-0">
-                    {/* Left Wing */}
-                    <div 
-                        className={`absolute top-0 right-[50%] w-28 h-4 origin-right rounded-l-full border-y border-l shadow-md ${MATERIALS[material].style} ${MATERIALS[material].border} ${MATERIALS[material].shadow}`}
-                        style={{ 
-                            transform: `rotate(${angle}deg)`,
-                            transition: isSimulating ? 'transform 0.5s ease-in' : 'none'
-                        }}
-                    ></div>
-                    {/* Right Wing */}
-                    <div 
-                        className={`absolute top-0 left-[50%] w-28 h-4 origin-left rounded-r-full border-y border-r shadow-md ${MATERIALS[material].style} ${MATERIALS[material].border} ${MATERIALS[material].shadow}`}
-                        style={{ 
-                            transform: `rotate(-${angle}deg)`,
-                            transition: isSimulating ? 'transform 0.5s ease-in' : 'none'
-                        }}
-                    ></div>
+                {/* 2. The Rat Guard (Yulu) - The Physics Object */}
+                {/* z-20 puts it BEHIND the z-30 floor, creating the effect of being underneath. 
+                    Increased width (w-40) ensures it sticks out past the w-72 floor. */}
+                <div className="relative z-20 w-full flex justify-center h-0 items-start -top-4">
+                     {/* The Yulu Board (Inverted Funnel Shape /\) */}
+                     {/* 
+                         Left Slope: Origin Right, rotate -angle (Counter-Clockwise) -> Tips down-left
+                         Right Slope: Origin Left, rotate +angle (Clockwise) -> Tips down-right
+                     */}
+                     <div className="relative">
+                         {/* Left Slope */}
+                         <div 
+                            className={`absolute top-0 right-0 w-40 h-5 origin-right rounded-l-md shadow-xl border-y border-l border-black/50 transition-transform duration-500`}
+                            style={{ 
+                                transform: `rotate(-${angle}deg)`, 
+                                background: MATERIALS[material].texture,
+                            }}
+                         ></div>
+                         {/* Right Slope */}
+                         <div 
+                            className={`absolute top-0 left-0 w-40 h-5 origin-left rounded-r-md shadow-xl border-y border-r border-black/50 transition-transform duration-500`}
+                            style={{ 
+                                transform: `rotate(${angle}deg)`,
+                                background: MATERIALS[material].texture,
+                            }}
+                         ></div>
+                         
+                         {/* Connection Joint */}
+                         <div className="absolute -top-1 -left-4 w-8 h-6 bg-stone-900 rounded-full z-20 shadow-md"></div>
+                     </div>
                 </div>
 
-                {/* The Pillar (Post) */}
-                <div className="w-12 h-48 bg-stone-700 border-x border-stone-600 relative z-0 flex justify-center">
+                {/* 3. The Pillar (Post) - High Stilt */}
+                <div className="w-12 h-64 bg-[#5d4037] border-x-2 border-black/50 relative z-10 flex justify-center shadow-inner">
                     {/* Wood Texture */}
-                    <div className="w-px h-full bg-stone-800/50 mx-1"></div>
-                    <div className="w-px h-full bg-stone-800/50 mx-1"></div>
+                    <div className="w-px h-full bg-black/20 mx-2"></div>
+                    <div className="w-px h-full bg-black/20 mx-1"></div>
                 </div>
 
-                {/* The Rat */}
+                {/* 4. The Rat Animation */}
                 <div 
-                    className="absolute z-20 transition-all duration-75 ease-linear"
+                    className="absolute z-30 transition-all duration-75"
                     style={{
-                        bottom: '40px', // Ground level offset
-                        transform: `translateY(-${ratPosition * 2.2}px) translateX(${ratStatus === 'slipped' ? '60px' : '0px'}) rotate(${ratStatus === 'slipped' ? '180deg' : '0deg'})`,
-                        opacity: ratStatus === 'success' ? 0 : 1
+                        bottom: ratStatus === 'slipped' ? '0px' : ratStatus === 'success' ? '300px' : `${Math.min(260, ratProgress * 4.5)}px`,
+                        left: ratStatus === 'slipped' ? '30%' : '50%',
+                        transform: `
+                           translateX(-50%) 
+                           ${ratStatus === 'hanging' ? 'rotate(180deg) translateY(-20px)' : ''}
+                           ${ratStatus === 'slipped' ? 'rotate(135deg)' : ''}
+                           ${ratStatus === 'success' ? 'scale(1.2)' : 'scale(1)'}
+                        `,
+                        opacity: ratStatus === 'success' && ratProgress < 100 ? 1 : 1
                     }}
                 >
-                    <div className={`relative ${ratStatus === 'climbing' ? 'animate-[bounce_0.2s_infinite]' : ''}`}>
-                        <span className="material-symbols-outlined text-4xl text-stone-300 drop-shadow-lg filter brightness-125">pest_control_rodent</span>
+                    <div className={`relative ${ratStatus === 'climbing' ? 'animate-[bounce_0.1s_infinite]' : ''}`}>
+                        <span className="material-symbols-outlined text-4xl text-stone-300 drop-shadow-md filter brightness-110">pest_control_rodent</span>
+                        
+                        {/* Status Effects */}
                         {ratStatus === 'success' && (
-                            <div className="absolute -top-8 left-0 text-emerald-400 font-bold animate-ping text-sm">YUM!</div>
+                            <div className="absolute -top-10 left-0 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded animate-bounce">入侵成功!</div>
                         )}
                         {ratStatus === 'slipped' && (
-                            <div className="absolute -top-8 left-0 text-red-400 font-bold animate-ping text-sm">SLIP!</div>
-                        )}
-                        {/* Sound Effect Visual Indicator */}
-                        {isSimulating && ratStatus === 'climbing' && (
-                            <span className="absolute -right-4 -top-2 text-[10px] text-yellow-300 animate-pulse font-bold">squeak!</span>
+                            <div className="absolute -top-10 left-0 bg-emerald-500 text-white text-xs font-bold px-2 py-1 rounded animate-ping">滑落!</div>
                         )}
                     </div>
                 </div>
 
                 {/* Ground */}
-                <div className="absolute bottom-0 w-full h-10 bg-stone-800 border-t-4 border-stone-700"></div>
+                <div className="absolute bottom-0 w-full h-8 bg-stone-900 border-t-4 border-stone-800 z-10"></div>
             </div>
 
-            {/* Angle Indicator Overlay */}
-            <div className="absolute top-4 left-4 font-mono text-yellow-400 text-sm bg-black/60 px-3 py-1 rounded border border-yellow-500/30 shadow-lg">
-                ANGLE: {angle}°
+            {/* Angle Indicator */}
+            <div className="absolute top-4 left-4 font-mono text-yellow-400 text-sm bg-black/80 px-3 py-2 rounded border-l-4 border-yellow-500 shadow-lg z-40">
+                <div className="text-[10px] text-slate-400 uppercase">Current Angle</div>
+                <div className="text-xl font-bold">{angle}°</div>
             </div>
         </div>
 
-        {/* Controls */}
-        <div className="flex flex-col justify-center space-y-6 bg-slate-800/50 p-8 rounded-xl border border-slate-700">
+        {/* --- CONTROLS --- */}
+        <div className="flex flex-col space-y-6">
             
-            {/* 1. Material Selector */}
-            <div>
-                <label className="text-yellow-400 font-bold mb-3 block flex items-center gap-2">
-                    <span className="material-symbols-outlined">layers</span> 
-                    防鼠板材質 (Material)
-                </label>
-                <div className="grid grid-cols-3 gap-3">
-                    {(Object.keys(MATERIALS) as MaterialType[]).map((m) => (
-                        <button
-                            key={m}
-                            onClick={() => !isSimulating && setMaterial(m)}
-                            disabled={isSimulating}
-                            className={`p-3 rounded-lg border-2 transition-all flex flex-col items-center gap-1
-                                ${material === m 
-                                    ? `bg-slate-700 ${MATERIALS[m].border} ring-1 ring-yellow-500/50` 
-                                    : 'bg-slate-800 border-slate-700 opacity-60 hover:opacity-100'}
-                            `}
-                        >
-                            <div className={`w-8 h-8 rounded-full ${MATERIALS[m].style} mb-1 shadow-sm`}></div>
-                            <span className="text-xs font-bold text-white">{MATERIALS[m].name.split(' ')[0]}</span>
-                            <span className="text-[9px] text-slate-400 scale-90">{MATERIALS[m].frictionDesc.split(' ')[0]}摩擦</span>
-                        </button>
-                    ))}
-                </div>
-            </div>
-
-            {/* 2. Angle Slider */}
-            <div>
-                <label className="flex justify-between text-yellow-400 font-bold mb-4 items-center">
-                    <span className="flex items-center gap-2"><span className="material-symbols-outlined">tune</span> 防鼠板角度 (Angle)</span>
-                    <span className="text-3xl font-mono text-white drop-shadow-md">{angle}°</span>
-                </label>
-                <input 
-                    type="range" 
-                    min="0" 
-                    max="80" 
-                    step="5" 
-                    value={angle}
-                    onChange={handleAngleChange}
-                    disabled={isSimulating}
-                    className="w-full h-4 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-yellow-500 hover:accent-yellow-400 transition-all focus:outline-none focus:ring-2 focus:ring-yellow-500/50"
-                />
-                <div className="flex justify-between text-xs text-slate-500 mt-2 font-mono uppercase tracking-wide">
-                    <span>Flat (0°)</span>
-                    <span>Steep (80°)</span>
-                </div>
-            </div>
-
-            {/* Physics Note */}
-            <div className="bg-yellow-900/20 p-4 rounded-lg border-l-4 border-yellow-500/50">
-                <h4 className="text-yellow-200 font-bold text-sm mb-2 flex items-center gap-2">
-                    <span className="material-symbols-outlined text-sm">science</span> 
-                    物理筆記
-                </h4>
-                <p className="text-slate-400 text-xs leading-relaxed">
-                    臨界條件：$\tan(\theta) &gt; \mu_s$ (靜摩擦係數)。<br/>
-                    材質越滑 ($\mu_s$ 越小)，所需的角度 $\theta$ 就越小。<br/>
-                    <span className="text-yellow-500/80">提示：鐵皮比木頭滑很多。</span>
+            {/* Intro Text */}
+            <div className="bg-slate-800/80 p-6 rounded-xl border border-slate-700">
+                <h3 className="text-white font-bold mb-2 flex items-center gap-2">
+                    <span className="material-symbols-outlined text-yellow-500">lightbulb</span>
+                    智慧的藍圖
+                </h3>
+                <p className="text-slate-300 text-sm leading-relaxed">
+                    泰雅族的穀倉 (Khu) 採高架設計，支柱頂端安裝了倒扣的木板或石板，稱為 <b>Yulu (防鼠板)</b>。<br/>
+                    這是一個精密的物理裝置：利用<b>材質的低摩擦力</b>與<b>傾斜角度</b>，讓老鼠無法對抗重力而滑落。
                 </p>
             </div>
 
+            {/* Controls Container */}
+            <div className="bg-black/40 p-6 rounded-xl border border-slate-700/50 space-y-6">
+                
+                {/* 1. Material */}
+                <div>
+                    <label className="text-yellow-400 font-bold mb-3 block text-sm">Step 1: 選擇防鼠板材質</label>
+                    <div className="grid grid-cols-3 gap-2">
+                        {(Object.keys(MATERIALS) as MaterialType[]).map((m) => (
+                            <button
+                                key={m}
+                                onClick={() => !isSimulating && setMaterial(m)}
+                                disabled={isSimulating}
+                                className={`p-2 rounded border transition-all flex flex-col items-center gap-1 text-center
+                                    ${material === m 
+                                        ? `bg-slate-700 border-yellow-500 ring-1 ring-yellow-500/50` 
+                                        : 'bg-slate-800 border-slate-600 opacity-60 hover:opacity-100'}
+                                `}
+                            >
+                                <div className={`w-full h-8 rounded ${MATERIALS[m].color} mb-1 shadow-inner opacity-80`}></div>
+                                <span className="text-xs font-bold text-white">{MATERIALS[m].name.split(' ')[0]}</span>
+                                <span className="text-[9px] text-slate-400 scale-90">{MATERIALS[m].frictionDesc.split(' ')[0]}摩擦</span>
+                            </button>
+                        ))}
+                    </div>
+                </div>
+
+                {/* 2. Angle */}
+                <div>
+                    <label className="flex justify-between text-yellow-400 font-bold mb-2 text-sm">
+                        <span>Step 2: 調整傾斜角度 (θ)</span>
+                        <span className="font-mono text-white">{angle}°</span>
+                    </label>
+                    <input 
+                        type="range" 
+                        min="0" 
+                        max="80" 
+                        step="5" 
+                        value={angle}
+                        onChange={handleAngleChange}
+                        disabled={isSimulating}
+                        className="w-full h-3 bg-slate-700 rounded-lg cursor-pointer accent-yellow-500 hover:accent-yellow-400"
+                    />
+                    <div className="flex justify-between text-[10px] text-slate-500 mt-1 font-mono uppercase">
+                        <span>Flat (0°)</span>
+                        <span>Steep (80°)</span>
+                    </div>
+                </div>
+
+                {/* Physics Note (Updated text) */}
+                <div className="bg-yellow-900/20 p-4 rounded border-l-2 border-yellow-500">
+                    <h4 className="text-yellow-200 font-bold text-xs mb-1">物理筆記：</h4>
+                    <p className="text-slate-400 text-xs leading-relaxed">
+                        老鼠要抓住板子，依靠的是<span className="text-white font-bold">摩擦力</span>。<br/>
+                        當板子傾斜時，<span className="text-white font-bold">地心引力</span>會產生一個往下拉的分力。<br/>
+                        當 <b>往下拉的力 > 摩擦力</b> 時，老鼠就會滑落。<br/>
+                        <span className="text-yellow-500/80 mt-1 block">提示：越滑的材質，需要的角度越小；越粗糙的材質，需要越陡峭的角度。</span>
+                    </p>
+                </div>
+            </div>
+
+            {/* Action Button */}
             <div className="text-center">
-                <div className="text-sm text-slate-300 mb-4 min-h-[1.5em] font-bold animate-pulse">{feedback}</div>
+                <div className="text-sm text-emerald-400 mb-2 min-h-[1.5em] font-bold animate-pulse font-mono">{feedback}</div>
                 <button 
                     onClick={startSimulation}
                     disabled={isSimulating}
                     className={`w-full py-4 rounded-lg font-bold text-lg shadow-lg flex items-center justify-center gap-2 transition-all transform active:scale-[0.98]
                         ${isSimulating 
                             ? 'bg-slate-700 text-slate-500 cursor-not-allowed' 
-                            : 'bg-gradient-to-r from-yellow-700 to-amber-600 text-white hover:from-yellow-600 hover:to-amber-500 border border-yellow-500/50 hover:shadow-yellow-500/20'}
+                            : 'bg-gradient-to-r from-yellow-700 to-amber-600 text-white hover:from-yellow-600 hover:to-amber-500 border border-yellow-500/50'}
                     `}
                 >
-                    {isSimulating ? (
-                        <>
-                            <span className="material-symbols-outlined animate-spin">settings</span>
-                            模擬進行中...
-                        </>
-                    ) : (
-                        <>
-                            <span className="material-symbols-outlined">play_circle</span>
-                            開始測試 (Test)
-                        </>
-                    )}
+                    {isSimulating ? '測試進行中...' : '開始防鼠測試'}
                 </button>
             </div>
         </div>
@@ -378,4 +399,3 @@ const Granary: React.FC<GranaryProps> = ({ onComplete, onFail, onSuccessMsg, onS
 };
 
 export default Granary;
-    
