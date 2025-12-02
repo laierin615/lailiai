@@ -370,7 +370,7 @@ const Granary: React.FC<GranaryProps> = ({ onComplete, onFail, onSuccessMsg, onS
                     <p className="text-slate-400 text-xs leading-relaxed">
                         老鼠要抓住板子，依靠的是<span className="text-white font-bold">摩擦力</span>。<br/>
                         當板子傾斜時，<span className="text-white font-bold">地心引力</span>會產生一個往下拉的分力。<br/>
-                        當 <b>往下拉的力 > 摩擦力</b> 時，老鼠就會滑落。<br/>
+                        當 <b>往下拉的力 &gt; 摩擦力</b> 時，老鼠就會滑落。<br/>
                         <span className="text-yellow-500/80 mt-1 block">提示：越滑的材質，需要的角度越小；越粗糙的材質，需要越陡峭的角度。</span>
                     </p>
                 </div>
