@@ -113,25 +113,26 @@ const ShrineNode = ({
       </div>
 
       {/* Label Box */}
-      <div className={`mt-2 px-3 py-1 bg-black/60 border ${borderColor} backdrop-blur-sm rounded text-center min-w-[120px]`}>
-        <div className={`text-xs md:text-sm font-bold font-serif ${textColor}`}>{title}</div>
-        <div className="text-[10px] tracking-widest text-slate-500 font-serif mt-0.5">{subtitle}</div>
+      <div className={`mt-2 px-4 py-2 bg-black/60 border ${borderColor} backdrop-blur-sm rounded text-center min-w-[140px]`}>
+        <div className={`text-sm md:text-base font-bold font-serif ${textColor}`}>{title}</div>
+        <div className="text-xs tracking-widest text-slate-500 font-serif mt-1">{subtitle}</div>
       </div>
     </button>
   );
 };
 
 const MapHub: React.FC<MapHubProps> = ({ gameState, onEnterLevel, onOpenGuide }) => {
-  // Determine unlock status (For testing: ALL UNLOCKED)
-  const isTaxonomyUnlocked = true; // gameState.prologue;
-  const isDyeUnlocked = true; // gameState.taxonomy;
-  const isTrapUnlocked = true; // gameState.dye;
-  const isRiverUnlocked = true; // gameState.trap;
-  const isFinalUnlocked = true; // gameState.river;
+  // Determine unlock status
   
-  // Side Quest Logic: Post-game content (Unlocked for testing)
-  const isKubaUnlocked = true; // gameState.final;
-  const isRattanUnlocked = true; // gameState.final;
+  const isTaxonomyUnlocked = gameState.prologue;
+  const isDyeUnlocked = gameState.taxonomy;
+  const isTrapUnlocked = gameState.dye;
+  const isRiverUnlocked = gameState.trap;
+  const isFinalUnlocked = gameState.river;
+  
+  // Side Quest Logic: Post-game content
+  const isKubaUnlocked = gameState.final;
+  const isRattanUnlocked = gameState.final;
 
   return (
     <section className="relative min-h-[90vh] pb-20 overflow-hidden bg-slate-950">
@@ -187,7 +188,7 @@ const MapHub: React.FC<MapHubProps> = ({ gameState, onEnterLevel, onOpenGuide })
           </div>
 
           {/* PATH: Prologue -> Taxonomy */}
-          <div className={`absolute top-[80px] h-[100px] w-[2px] ${gameState.prologue ? 'bg-cyan-500 shadow-[0_0_10px_cyan]' : 'bg-slate-800'} transition-all duration-1000`}></div>
+          <div className={`absolute top-[80px] h-[100px] w-[2px] ${gameState.prologue ? 'bg-cyan-500 shadow-[0_0_10px_cyan]' : 'bg-slate-800'} transition-all duration-1000 pointer-events-none`}></div>
 
           {/* 2. LEVEL 1: Taxonomy */}
           <div className="relative z-10 mt-[20px]">
@@ -203,22 +204,22 @@ const MapHub: React.FC<MapHubProps> = ({ gameState, onEnterLevel, onOpenGuide })
 
           {/* --- SEQUENTIAL PATH SYSTEM (Main Quest) --- */}
           {/* Stem from Taxonomy */}
-          <div className={`absolute top-[220px] left-1/2 -translate-x-1/2 h-[20px] w-[2px] ${isDyeUnlocked ? 'bg-cyan-500 shadow-[0_0_10px_cyan]' : 'bg-slate-800'} transition-all duration-1000`}></div>
+          <div className={`absolute top-[220px] left-1/2 -translate-x-1/2 h-[20px] w-[2px] ${isDyeUnlocked ? 'bg-cyan-500 shadow-[0_0_10px_cyan]' : 'bg-slate-800'} transition-all duration-1000 pointer-events-none`}></div>
           
           {/* Path to Dye (Left) */}
-          <div className={`absolute top-[240px] right-1/2 w-[140px] md:w-[200px] h-[2px] ${isDyeUnlocked ? 'bg-cyan-500 shadow-[0_0_10px_cyan]' : 'bg-slate-800'} transition-all duration-1000 origin-right`}></div>
-          <div className={`absolute top-[240px] right-[calc(50%+140px)] md:right-[calc(50%+200px)] w-[2px] h-[80px] ${isDyeUnlocked ? 'bg-cyan-500 shadow-[0_0_10px_cyan]' : 'bg-slate-800'} transition-all duration-1000`}></div>
+          <div className={`absolute top-[240px] right-1/2 w-[140px] md:w-[200px] h-[2px] ${isDyeUnlocked ? 'bg-cyan-500 shadow-[0_0_10px_cyan]' : 'bg-slate-800'} transition-all duration-1000 origin-right pointer-events-none`}></div>
+          <div className={`absolute top-[240px] right-[calc(50%+140px)] md:right-[calc(50%+200px)] w-[2px] h-[80px] ${isDyeUnlocked ? 'bg-cyan-500 shadow-[0_0_10px_cyan]' : 'bg-slate-800'} transition-all duration-1000 pointer-events-none`}></div>
 
           {/* Path Dye -> Trap (Left to Center) */}
-          <div className={`absolute top-[360px] left-[calc(50%-140px)] md:left-[calc(50%-200px)] w-[140px] md:w-[200px] h-[2px] ${isTrapUnlocked ? 'bg-cyan-500 shadow-[0_0_10px_cyan]' : 'bg-slate-800'} transition-all duration-1000 origin-left z-0`}></div>
+          <div className={`absolute top-[360px] left-[calc(50%-140px)] md:left-[calc(50%-200px)] w-[140px] md:w-[200px] h-[2px] ${isTrapUnlocked ? 'bg-cyan-500 shadow-[0_0_10px_cyan]' : 'bg-slate-800'} transition-all duration-1000 origin-left z-0 pointer-events-none`}></div>
 
           {/* Path Trap -> River (Center to Right) */}
-          <div className={`absolute top-[360px] left-[50%] w-[140px] md:w-[200px] h-[2px] ${isRiverUnlocked ? 'bg-cyan-500 shadow-[0_0_10px_cyan]' : 'bg-slate-800'} transition-all duration-1000 origin-left z-0`}></div>
+          <div className={`absolute top-[360px] left-[50%] w-[140px] md:w-[200px] h-[2px] ${isRiverUnlocked ? 'bg-cyan-500 shadow-[0_0_10px_cyan]' : 'bg-slate-800'} transition-all duration-1000 origin-left z-0 pointer-events-none`}></div>
 
           {/* Path River -> Final (Right to Center Bottom) */}
-          <div className={`absolute top-[400px] left-[calc(50%+140px)] md:left-[calc(50%+200px)] w-[2px] h-[60px] ${isFinalUnlocked ? 'bg-amber-500 shadow-[0_0_10px_orange]' : 'bg-slate-800'} transition-all duration-1000`}></div>
-          <div className={`absolute top-[460px] left-[50%] w-[140px] md:w-[200px] h-[2px] ${isFinalUnlocked ? 'bg-amber-500 shadow-[0_0_10px_orange]' : 'bg-slate-800'} transition-all duration-1000`}></div>
-          <div className={`absolute top-[460px] left-1/2 -translate-x-1/2 w-[2px] h-[40px] ${isFinalUnlocked ? 'bg-amber-500 shadow-[0_0_10px_orange]' : 'bg-slate-800'} transition-all duration-1000`}></div>
+          <div className={`absolute top-[400px] left-[calc(50%+140px)] md:left-[calc(50%+200px)] w-[2px] h-[60px] ${isFinalUnlocked ? 'bg-amber-500 shadow-[0_0_10px_orange]' : 'bg-slate-800'} transition-all duration-1000 pointer-events-none`}></div>
+          <div className={`absolute top-[460px] left-[50%] w-[140px] md:w-[200px] h-[2px] ${isFinalUnlocked ? 'bg-amber-500 shadow-[0_0_10px_orange]' : 'bg-slate-800'} transition-all duration-1000 pointer-events-none`}></div>
+          <div className={`absolute top-[460px] left-1/2 -translate-x-1/2 w-[2px] h-[40px] ${isFinalUnlocked ? 'bg-amber-500 shadow-[0_0_10px_orange]' : 'bg-slate-800'} transition-all duration-1000 pointer-events-none`}></div>
 
 
           {/* 3. TRIALS: Dye -> Trap -> River (Sequential Order) */}
@@ -255,7 +256,7 @@ const MapHub: React.FC<MapHubProps> = ({ gameState, onEnterLevel, onOpenGuide })
           </div>
 
           {/* 4. FINAL BOSS */}
-          <div className="relative z-10 mt-[40px] md:mt-[60px] mb-2">
+          <div className="relative z-30 mt-[40px] md:mt-[60px] mb-2">
              <button
                 onClick={() => isFinalUnlocked && onEnterLevel('final')}
                 disabled={!isFinalUnlocked}
@@ -284,7 +285,7 @@ const MapHub: React.FC<MapHubProps> = ({ gameState, onEnterLevel, onOpenGuide })
           </div>
 
           {/* PATH: Final -> Extras */}
-          <div className={`relative z-0 h-[60px] w-[2px] ${isKubaUnlocked ? 'bg-purple-500 shadow-[0_0_10px_purple]' : 'bg-slate-800'} transition-all duration-1000`}></div>
+          <div className={`relative z-0 h-[60px] w-[2px] ${isKubaUnlocked ? 'bg-purple-500 shadow-[0_0_10px_purple]' : 'bg-slate-800'} transition-all duration-1000 pointer-events-none`}></div>
 
           {/* 5. SIDE LEVELS (Branching) */}
           <div className="relative z-10 mb-10 flex gap-8">

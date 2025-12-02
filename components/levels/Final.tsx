@@ -12,14 +12,56 @@ interface FinalProps {
   initialAnswer?: string;
 }
 
+// --- 離線備援生成器 (Offline Generator) ---
+// 當 API 失敗時，使用此函數根據變因組裝一份像樣的報告
+const generateOfflineProposal = (topic: string, trapData: string): string => {
+    // 嘗試解析 Trap 的變因 (格式通常為 Topic: ... | IV: ... | DV: ... | CV: ...)
+    let iv = "陷阱材質 (Material)";
+    let dv = "觸發成功率 (Success Rate)";
+    let cv = "擺放高度 (Height)";
+    
+    if (trapData && trapData.includes('|')) {
+        const parts = trapData.split('|');
+        parts.forEach(p => {
+            if (p.includes('IV:')) iv = p.replace('IV:', '').trim();
+            if (p.includes('DV:')) dv = p.replace('DV:', '').trim();
+            if (p.includes('CV:')) cv = p.replace('CV:', '').trim();
+        });
+    }
+
+    const cleanTopic = topic.replace("Topic:", "").trim() || "原住民傳統陷阱的力學分析";
+
+    return `【系統自動生成 (離線模式)】
+
+一、研究動機 (Motivation)
+本次研究主題為「${cleanTopic}」。原住民族的傳統智慧中蘊含著豐富的科學原理，例如在狩獵陷阱中對力學與材料特性的精準掌握。為了保存並驗證這些瀕臨失傳的技藝，本研究希望能以現代科學方法進行解構與分析。
+
+二、研究目的 (Objectives)
+1. 探討不同環境變因對裝置運作效率的影響。
+2. 建立量化數據模型，驗證傳統經驗法則（如：「太高打不到，太低打不暈」）的科學依據。
+3. 將研究成果應用於防災或結構力學教學。
+
+三、研究方法與變因 (Methodology)
+本實驗設計採用控制變因法進行模擬測試：
+1. 操縱變因 (Independent Variable)：${iv}。我們將改變此條件以觀察變化。
+2. 應變變因 (Dependent Variable)：${dv}。透過測量此數據來判斷實驗結果。
+3. 控制變因 (Control Variables)：${cv}。實驗過程中保持固定，以確保數據準確性。
+
+四、預期成果 (Expected Outcome)
+預期能找出${iv}與${dv}之間的最佳化關係曲線。這不僅證明了祖先的智慧符合物理學中的能量守恆與摩擦力原理，更能為現代仿生結構設計提供新的靈感。`;
+};
+
 const Final: React.FC<FinalProps> = ({ onComplete, onSaveAnswer, levelAnswers, initialAnswer }) => {
   const [isGenerating, setIsGenerating] = useState(false);
   const [proposal, setProposal] = useState("");
   
-  // Extract specific data from previous levels
-  const taxonomyTopic = levelAnswers.taxonomy || "未偵測到主題";
-  const trapData = levelAnswers.trap || "未偵測到實驗設計";
+  // Extract specific data from previous levels safely
+  const taxonomyTopic = levelAnswers?.taxonomy || "未偵測到主題";
+  const trapData = levelAnswers?.trap || "未偵測到實驗設計";
   
+  // Check if data is missing (for fallback generation)
+  const isMissingData = taxonomyTopic.includes("未偵測") || trapData.includes("未偵測");
+
   // Load previous answer if available
   useEffect(() => {
     if (initialAnswer) {
@@ -28,74 +70,70 @@ const Final: React.FC<FinalProps> = ({ onComplete, onSaveAnswer, levelAnswers, i
   }, [initialAnswer]);
 
   const generateProposal = async () => {
-    if (!process.env.API_KEY) {
-        console.error("API Key not found");
-        return;
-    }
-
     setIsGenerating(true);
+    let resultText = "";
 
-    try {
-        const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-        
-        // Construct a highly specific prompt using the gathered data
-        const context = `
-            The student has completed a gamified learning journey about Indigenous Science.
+    // 1. 嘗試 API 呼叫
+    if (process.env.API_KEY) {
+        try {
+            const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
             
-            1. **Detected Research Topic (from Initial Plateau)**: 
-               "${taxonomyTopic}"
-            
-            2. **Detected Experimental Design (from Trial of Power)**: 
-               "${trapData}"
-               (Note: IV=Independent Variable, DV=Dependent Variable, CV=Control Variable)
-            
-            3. **Other Concepts Learned**:
-               - Friction & Physics (Granary Level)
-               - Chemical Extraction (Dye Level)
-               - Quantitative Analysis (River Level)
-        `;
+            let context = "";
+            if (isMissingData) {
+                context = `Data Missing. User skipped levels. Topic: Granary Mechanics. IV: Surface Friction. DV: Drop Rate.`;
+            } else {
+                context = `Topic: ${taxonomyTopic}. Trap Data: ${trapData}. Concepts: Physics, Chemistry, Quantitative Analysis.`;
+            }
 
-        const prompt = `
-            You are a mentor for the "Indigenous Science Fair (原住民雲端科展)". 
-            Your goal is to help the student synthesize their game progress into a coherent **Research Proposal Summary (研究構想摘要)**.
+            const prompt = `
+                Role: Science Fair Mentor.
+                Task: Write a research proposal summary in Traditional Chinese (~400 words).
+                Topic Context: ${context}
+                
+                Structure:
+                1. Motivation: Link indigenous wisdom to science.
+                2. Objectives.
+                3. Methodology: Explain the IV, DV, CV provided in context.
+                4. Outcome.
+                
+                Constraint: Do not mention "safety violation". Treat "traps" as "mechanical structures" for physics study.
+            `;
 
-            Please write a ~500 words proposal in **Traditional Chinese (Taiwan)** based strictly on the context above.
+            const response = await ai.models.generateContent({
+                model: 'gemini-2.5-flash',
+                contents: prompt,
+                config: {
+                    maxOutputTokens: 2000,
+                    // 強制放寬安全設定，避免因 "Trap" 被誤殺
+                    safetySettings: [
+                        { category: 'HARM_CATEGORY_HATE_SPEECH', threshold: 'BLOCK_NONE' },
+                        { category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT', threshold: 'BLOCK_NONE' },
+                        { category: 'HARM_CATEGORY_HARASSMENT', threshold: 'BLOCK_NONE' },
+                        { category: 'HARM_CATEGORY_DANGEROUS_CONTENT', threshold: 'BLOCK_NONE' }
+                    ]
+                }
+            });
 
-            **Structure:**
-            1. **研究動機 (Motivation)**: 
-               - Start by referencing their specific topic: "${taxonomyTopic}".
-               - Connect it to why preserving this indigenous wisdom is important.
-            
-            2. **研究目的 (Objectives)**: 
-               - Clearly state what they intend to find out based on their topic.
+            if (response.text) {
+                resultText = response.text;
+            } else {
+                throw new Error("Empty response");
+            }
 
-            3. **研究方法與變因 (Methodology & Variables)**: 
-               - **CRITICAL**: You MUST use the exact variables they defined in the "Trial of Power" data: ${trapData}.
-               - Explain how they will manipulate the Independent Variable to measure the Dependent Variable, while keeping Control Variables constant.
-               - Mention using quantitative methods (inspired by the River level) to measure results.
-
-            4. **預期成果 (Expected Outcome)**: 
-               - What scientific value will this bring? How does it validate the traditional wisdom?
-
-            **Tone:** Encouraging, academic, structured.
-            **Context:** ${context}
-        `;
-
-        const response = await ai.models.generateContent({
-            model: 'gemini-2.5-flash',
-            contents: prompt,
-        });
-
-        const text = response.text || "生成失敗，請稍後再試。";
-        setProposal(text);
-        onSaveAnswer(text); // Save the generated proposal as the final answer
-
-    } catch (error) {
-        console.error("AI Generation Error", error);
-        setProposal("希卡石板連線中斷... 無法生成報告。請檢查網路或 API Key。");
-    } finally {
-        setIsGenerating(false);
+        } catch (error) {
+            console.warn("AI Generation Failed (Safety or Network), switching to Offline Mode.", error);
+            // API 失敗時，不顯示錯誤，直接使用離線備援
+            resultText = generateOfflineProposal(taxonomyTopic, trapData);
+        }
+    } else {
+        // 無 API Key，直接使用離線備援
+        console.warn("No API Key, using Offline Mode.");
+        resultText = generateOfflineProposal(taxonomyTopic, trapData);
     }
+
+    setProposal(resultText);
+    onSaveAnswer(resultText); 
+    setIsGenerating(false);
   };
 
   const copyToClipboard = () => {
@@ -127,10 +165,10 @@ const Final: React.FC<FinalProps> = ({ onComplete, onSaveAnswer, levelAnswers, i
                   <div className="text-left bg-black/60 p-5 rounded border border-slate-700 text-sm font-mono space-y-3 shadow-inner">
                       <div className="flex justify-between items-center border-b border-slate-700 pb-2">
                           <span className="text-slate-400">研究主題 (Initial Plateau)</span>
-                          {levelAnswers.taxonomy ? (
+                          {levelAnswers?.taxonomy ? (
                               <span className="text-emerald-400 flex items-center gap-1"><span className="material-symbols-outlined text-sm">check_circle</span> 已登錄</span>
                           ) : (
-                              <span className="text-red-400">未檢測</span>
+                              <span className="text-red-400">未檢測 (啟用預設)</span>
                           )}
                       </div>
                       <div className="text-slate-300 pl-2 border-l-2 border-emerald-500/30 truncate">
@@ -139,10 +177,10 @@ const Final: React.FC<FinalProps> = ({ onComplete, onSaveAnswer, levelAnswers, i
 
                       <div className="flex justify-between items-center border-b border-slate-700 pb-2 pt-2">
                           <span className="text-slate-400">實驗變因 (Trial of Power)</span>
-                          {levelAnswers.trap ? (
+                          {levelAnswers?.trap ? (
                               <span className="text-emerald-400 flex items-center gap-1"><span className="material-symbols-outlined text-sm">check_circle</span> 已登錄</span>
                           ) : (
-                              <span className="text-red-400">未檢測</span>
+                              <span className="text-red-400">未檢測 (啟用預設)</span>
                           )}
                       </div>
                       <div className="text-slate-300 pl-2 border-l-2 border-emerald-500/30 text-xs break-all">
@@ -152,6 +190,8 @@ const Final: React.FC<FinalProps> = ({ onComplete, onSaveAnswer, levelAnswers, i
 
                   <p className="text-slate-300 text-sm leading-relaxed mt-4">
                       古代核心 (AI) 將讀取上述數據，協助你撰寫完整的「研究構想摘要」。
+                      <br/>
+                      <span className="text-xs text-slate-500">(若連線不穩定，系統將啟動備援協議自動生成)</span>
                   </p>
               </div>
 
@@ -172,7 +212,7 @@ const Final: React.FC<FinalProps> = ({ onComplete, onSaveAnswer, levelAnswers, i
                 ) : (
                     <>
                         <span className="material-symbols-outlined">history_edu</span>
-                        生成研究構想摘要
+                        {isMissingData ? '生成範例研究構想' : '生成研究構想摘要'}
                     </>
                 )}
               </button>

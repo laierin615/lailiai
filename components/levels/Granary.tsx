@@ -294,9 +294,9 @@ const Granary: React.FC<GranaryProps> = ({ onComplete, onFail, onSuccessMsg, onS
             </div>
 
             {/* Angle Indicator */}
-            <div className="absolute top-4 left-4 font-mono text-yellow-400 text-sm bg-black/80 px-3 py-2 rounded border-l-4 border-yellow-500 shadow-lg z-40">
+            <div className="absolute top-4 left-4 font-mono text-yellow-400 text-base bg-black/80 px-4 py-2 rounded border-l-4 border-yellow-500 shadow-lg z-40">
                 <div className="text-[10px] text-slate-400 uppercase">Current Angle</div>
-                <div className="text-xl font-bold">{angle}°</div>
+                <div className="text-2xl font-bold">{angle}°</div>
             </div>
         </div>
 
@@ -305,11 +305,11 @@ const Granary: React.FC<GranaryProps> = ({ onComplete, onFail, onSuccessMsg, onS
             
             {/* Intro Text */}
             <div className="bg-slate-800/80 p-6 rounded-xl border border-slate-700">
-                <h3 className="text-white font-bold mb-2 flex items-center gap-2">
-                    <span className="material-symbols-outlined text-yellow-500">lightbulb</span>
+                <h3 className="text-white font-bold mb-3 flex items-center gap-2 text-lg">
+                    <span className="material-symbols-outlined text-yellow-500 text-2xl">lightbulb</span>
                     智慧的藍圖
                 </h3>
-                <p className="text-slate-300 text-sm leading-relaxed">
+                <p className="text-slate-300 text-base leading-relaxed">
                     泰雅族的穀倉 (Khu) 採高架設計，支柱頂端安裝了倒扣的木板或石板，稱為 <b>Yulu (防鼠板)</b>。<br/>
                     這是一個精密的物理裝置：利用<b>材質的低摩擦力</b>與<b>傾斜角度</b>，讓老鼠無法對抗重力而滑落。
                 </p>
@@ -320,22 +320,22 @@ const Granary: React.FC<GranaryProps> = ({ onComplete, onFail, onSuccessMsg, onS
                 
                 {/* 1. Material */}
                 <div>
-                    <label className="text-yellow-400 font-bold mb-3 block text-sm">Step 1: 選擇防鼠板材質</label>
-                    <div className="grid grid-cols-3 gap-2">
+                    <label className="text-yellow-400 font-bold mb-3 block text-base">Step 1: 選擇防鼠板材質</label>
+                    <div className="grid grid-cols-3 gap-3">
                         {(Object.keys(MATERIALS) as MaterialType[]).map((m) => (
                             <button
                                 key={m}
                                 onClick={() => !isSimulating && setMaterial(m)}
                                 disabled={isSimulating}
-                                className={`p-2 rounded border transition-all flex flex-col items-center gap-1 text-center
+                                className={`p-3 rounded border transition-all flex flex-col items-center gap-1 text-center
                                     ${material === m 
                                         ? `bg-slate-700 border-yellow-500 ring-1 ring-yellow-500/50` 
                                         : 'bg-slate-800 border-slate-600 opacity-60 hover:opacity-100'}
                                 `}
                             >
-                                <div className={`w-full h-8 rounded ${MATERIALS[m].color} mb-1 shadow-inner opacity-80`}></div>
-                                <span className="text-xs font-bold text-white">{MATERIALS[m].name.split(' ')[0]}</span>
-                                <span className="text-[9px] text-slate-400 scale-90">{MATERIALS[m].frictionDesc.split(' ')[0]}摩擦</span>
+                                <div className={`w-full h-10 rounded ${MATERIALS[m].color} mb-1 shadow-inner opacity-80`}></div>
+                                <span className="text-sm font-bold text-white">{MATERIALS[m].name.split(' ')[0]}</span>
+                                <span className="text-xs text-slate-400 scale-90">{MATERIALS[m].frictionDesc.split(' ')[0]}摩擦</span>
                             </button>
                         ))}
                     </div>
@@ -343,7 +343,7 @@ const Granary: React.FC<GranaryProps> = ({ onComplete, onFail, onSuccessMsg, onS
 
                 {/* 2. Angle */}
                 <div>
-                    <label className="flex justify-between text-yellow-400 font-bold mb-2 text-sm">
+                    <label className="flex justify-between text-yellow-400 font-bold mb-2 text-base">
                         <span>Step 2: 調整傾斜角度 (θ)</span>
                         <span className="font-mono text-white">{angle}°</span>
                     </label>
@@ -355,9 +355,9 @@ const Granary: React.FC<GranaryProps> = ({ onComplete, onFail, onSuccessMsg, onS
                         value={angle}
                         onChange={handleAngleChange}
                         disabled={isSimulating}
-                        className="w-full h-3 bg-slate-700 rounded-lg cursor-pointer accent-yellow-500 hover:accent-yellow-400"
+                        className="w-full h-4 bg-slate-700 rounded-lg cursor-pointer accent-yellow-500 hover:accent-yellow-400"
                     />
-                    <div className="flex justify-between text-[10px] text-slate-500 mt-1 font-mono uppercase">
+                    <div className="flex justify-between text-xs text-slate-500 mt-1 font-mono uppercase">
                         <span>Flat (0°)</span>
                         <span>Steep (80°)</span>
                     </div>
@@ -365,8 +365,8 @@ const Granary: React.FC<GranaryProps> = ({ onComplete, onFail, onSuccessMsg, onS
 
                 {/* Physics Note (Updated text) */}
                 <div className="bg-yellow-900/20 p-4 rounded border-l-2 border-yellow-500">
-                    <h4 className="text-yellow-200 font-bold text-xs mb-1">物理筆記：</h4>
-                    <p className="text-slate-400 text-xs leading-relaxed">
+                    <h4 className="text-yellow-200 font-bold text-sm mb-2">物理筆記：</h4>
+                    <p className="text-slate-400 text-sm leading-relaxed">
                         老鼠要抓住板子，依靠的是<span className="text-white font-bold">摩擦力</span>。<br/>
                         當板子傾斜時，<span className="text-white font-bold">地心引力</span>會產生一個往下拉的分力。<br/>
                         當 <b>往下拉的力 &gt; 摩擦力</b> 時，老鼠就會滑落。<br/>
@@ -377,7 +377,7 @@ const Granary: React.FC<GranaryProps> = ({ onComplete, onFail, onSuccessMsg, onS
 
             {/* Action Button */}
             <div className="text-center">
-                <div className="text-sm text-emerald-400 mb-2 min-h-[1.5em] font-bold animate-pulse font-mono">{feedback}</div>
+                <div className="text-base text-emerald-400 mb-3 min-h-[1.5em] font-bold animate-pulse font-mono">{feedback}</div>
                 <button 
                     onClick={startSimulation}
                     disabled={isSimulating}

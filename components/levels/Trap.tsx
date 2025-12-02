@@ -13,10 +13,11 @@ interface TrapProps {
 type RopeType = 'banana' | 'rattan';
 type Phase = 'setup' | 'simulating' | 'diagram' | 'dialogue' | 'task';
 
-interface AiSuggestion {
+interface AiResult {
   independent: string;
   dependent: string;
   control: string;
+  proposal: string;
 }
 
 // Custom Boar SVG Icon
@@ -42,8 +43,11 @@ const Trap: React.FC<TrapProps> = ({ onComplete, onFail, onSuccessMsg, onSaveAns
   const [independentVar, setIndependentVar] = useState("");
   const [dependentVar, setDependentVar] = useState("");
   const [controlVar, setControlVar] = useState("");
+  
+  // AI Modal State
   const [isAiLoading, setIsAiLoading] = useState(false);
-  const [aiSuggestion, setAiSuggestion] = useState<AiSuggestion | null>(null);
+  const [showAiModal, setShowAiModal] = useState(false);
+  const [aiResult, setAiResult] = useState<AiResult | null>(null);
 
   // Animation States
   const [boarPos, setBoarPos] = useState(100); // % from left
@@ -172,15 +176,13 @@ const Trap: React.FC<TrapProps> = ({ onComplete, onFail, onSuccessMsg, onSaveAns
         const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
         const topic = researchTopic.trim() || "改良原住民陷阱的機械結構";
         const prompt = `
-            You are a science fair mentor. The student is designing an experiment about: "${topic}".
-            Please suggest suitable experimental variables in Traditional Chinese (Taiwan).
+            You are a science fair mentor. The student's topic is: "${topic}".
             
-            Return ONLY a JSON object with this schema:
-            {
-                "independent": "string (1 variable to change, e.g., Weight)",
-                "dependent": "string (1 variable to measure, e.g., Impact Force)",
-                "control": "string (2-3 variables to keep constant)"
-            }
+            Task:
+            1. Write a short, encouraging "Sheikah Mentor Analysis" (proposal) in Traditional Chinese (approx 100 words). Explain WHY this topic is scientifically interesting.
+            2. Identify the Independent, Dependent, and Control variables.
+
+            Return a valid JSON object.
         `;
         
         const response = await ai.models.generateContent({
@@ -191,28 +193,66 @@ const Trap: React.FC<TrapProps> = ({ onComplete, onFail, onSuccessMsg, onSaveAns
                 responseSchema: {
                     type: Type.OBJECT,
                     properties: {
-                        independent: { type: Type.STRING },
-                        dependent: { type: Type.STRING },
-                        control: { type: Type.STRING }
-                    }
+                        proposal: { type: Type.STRING, description: "Short research analysis/encouragement in Traditional Chinese" },
+                        independent: { type: Type.STRING, description: "Independent variable in Traditional Chinese" },
+                        dependent: { type: Type.STRING, description: "Dependent variable in Traditional Chinese" },
+                        control: { type: Type.STRING, description: "Control variables in Traditional Chinese" }
+                    },
+                    required: ["proposal", "independent", "dependent", "control"],
                 }
             }
         });
 
-        const data = JSON.parse(response.text || "{}");
-        if (data.independent || data.dependent || data.control) {
-            setAiSuggestion({
-                independent: data.independent || "",
-                dependent: data.dependent || "",
-                control: data.control || ""
-            });
+        let text = response.text || "{}";
+        
+        // Robust JSON Parsing
+        try {
+            // 1. Try cleaning markdown
+            const cleanText = text.replace(/```json/g, '').replace(/```/g, '').trim();
+            
+            // 2. Try finding JSON bounds if garbage exists
+            const firstBrace = cleanText.indexOf('{');
+            const lastBrace = cleanText.lastIndexOf('}');
+            
+            let jsonString = cleanText;
+            if (firstBrace !== -1 && lastBrace !== -1) {
+                jsonString = cleanText.substring(firstBrace, lastBrace + 1);
+            }
+
+            const data = JSON.parse(jsonString);
+            
+            if (data.independent) {
+                setAiResult({
+                    proposal: data.proposal || "分析完成，請檢視以下變因。",
+                    independent: data.independent,
+                    dependent: data.dependent,
+                    control: data.control
+                });
+                setShowAiModal(true); 
+            } else {
+                throw new Error("Missing required fields");
+            }
+
+        } catch (parseError) {
+            console.error("JSON Parse Error:", parseError, text);
+            throw new Error("Failed to parse AI response");
         }
 
     } catch (error) {
         console.error("AI Error", error);
+        onFail("希卡導師連線受到磁場干擾 (JSON Error)，請再試一次。");
     } finally {
         setIsAiLoading(false);
     }
+  };
+
+  const applyAiResult = () => {
+      if (aiResult) {
+          setIndependentVar(aiResult.independent);
+          setDependentVar(aiResult.dependent);
+          setControlVar(aiResult.control);
+          setShowAiModal(false);
+      }
   };
 
   const submitTask = () => {
@@ -244,29 +284,29 @@ const Trap: React.FC<TrapProps> = ({ onComplete, onFail, onSuccessMsg, onSaveAns
           
           {/* Controls (Left Side - 1/3) */}
           <div className="lg:col-span-1 bg-slate-900/90 p-6 rounded-xl border-2 border-orange-700/50 flex flex-col space-y-6 shadow-xl h-fit order-2 lg:order-1">
-            <h3 className="font-bold text-orange-200 border-b border-orange-900/50 pb-2 flex items-center gap-2">
-              <span className="material-symbols-outlined text-sm text-orange-500">tune</span> 
+            <h3 className="font-bold text-orange-200 border-b border-orange-900/50 pb-2 flex items-center gap-2 text-lg">
+              <span className="material-symbols-outlined text-base text-orange-500">tune</span> 
               變因控制台 (Variables)
             </h3>
             
             {/* Mass */}
             <div>
-              <label className="text-xs text-orange-500 font-bold mb-2 block flex justify-between">
+              <label className="text-sm text-orange-500 font-bold mb-3 block flex justify-between">
                 <span>1. 壓重 (Mass)</span>
-                <span className="text-slate-400 font-mono">石板數量</span>
+                <span className="text-slate-400 font-mono text-xs pt-1">石板數量</span>
               </label>
               <div className="grid grid-cols-4 gap-2">
                 {[10, 20, 30, 40].map(m => (
                   <button
                     key={m}
                     onClick={() => phase === 'setup' && setMass(m)}
-                    className={`p-2 rounded text-xs border transition-all font-mono relative overflow-hidden flex flex-col items-center
+                    className={`p-3 rounded text-sm border transition-all font-mono relative overflow-hidden flex flex-col items-center
                       ${mass === m ? 'bg-orange-900 border-orange-500 text-white shadow-[0_0_10px_rgba(249,115,22,0.3)]' : 'bg-slate-800 border-slate-700 text-slate-400'}
                       ${phase !== 'setup' ? 'opacity-50 cursor-not-allowed' : 'hover:bg-slate-700'}
                     `}
                   >
-                    <span className="text-lg">{m}</span>
-                    <span className="text-[9px]">kg</span>
+                    <span className="text-xl font-bold">{m}</span>
+                    <span className="text-xs">kg</span>
                   </button>
                 ))}
               </div>
@@ -274,9 +314,9 @@ const Trap: React.FC<TrapProps> = ({ onComplete, onFail, onSuccessMsg, onSaveAns
 
             {/* Height */}
             <div>
-              <label className="flex justify-between text-xs text-orange-500 font-bold mb-2">
+              <label className="flex justify-between text-sm text-orange-500 font-bold mb-3">
                 <span>2. 設置高度 (Height)</span>
-                <span className="font-mono text-white">{height} cm</span>
+                <span className="font-mono text-white text-lg">{height} cm</span>
               </label>
               <input
                 type="range"
@@ -286,9 +326,9 @@ const Trap: React.FC<TrapProps> = ({ onComplete, onFail, onSuccessMsg, onSaveAns
                 value={height}
                 onChange={(e) => phase === 'setup' && setHeight(parseInt(e.target.value))}
                 disabled={phase !== 'setup'}
-                className="w-full h-2 bg-slate-800 rounded-lg cursor-pointer accent-orange-500"
+                className="w-full h-3 bg-slate-800 rounded-lg cursor-pointer accent-orange-500"
               />
-              <div className="flex justify-between text-[10px] text-slate-600 mt-1 font-mono">
+              <div className="flex justify-between text-xs text-slate-600 mt-1 font-mono">
                 <span>Low (50)</span>
                 <span>High (150)</span>
               </div>
@@ -296,11 +336,11 @@ const Trap: React.FC<TrapProps> = ({ onComplete, onFail, onSuccessMsg, onSaveAns
 
             {/* Rope */}
             <div>
-              <label className="text-xs text-orange-500 font-bold mb-2 block">3. 繩索材質 (Material)</label>
+              <label className="text-sm text-orange-500 font-bold mb-3 block">3. 繩索材質 (Material)</label>
               <div className="flex gap-2">
                 <button
                   onClick={() => phase === 'setup' && setRope('banana')}
-                  className={`flex-1 p-3 rounded text-xs border transition-all flex items-center justify-center gap-2
+                  className={`flex-1 p-4 rounded text-sm border transition-all flex items-center justify-center gap-2
                     ${rope === 'banana' ? 'bg-orange-900/80 border-orange-500 text-white ring-1 ring-orange-500/50' : 'bg-slate-800 border-slate-700 text-slate-400'}
                     ${phase !== 'setup' ? 'opacity-50 cursor-not-allowed' : ''}
                   `}
@@ -309,7 +349,7 @@ const Trap: React.FC<TrapProps> = ({ onComplete, onFail, onSuccessMsg, onSaveAns
                 </button>
                 <button
                   onClick={() => phase === 'setup' && setRope('rattan')}
-                  className={`flex-1 p-3 rounded text-xs border transition-all flex items-center justify-center gap-2
+                  className={`flex-1 p-4 rounded text-sm border transition-all flex items-center justify-center gap-2
                     ${rope === 'rattan' ? 'bg-orange-900/80 border-orange-500 text-white ring-1 ring-orange-500/50' : 'bg-slate-800 border-slate-700 text-slate-400'}
                     ${phase !== 'setup' ? 'opacity-50 cursor-not-allowed' : ''}
                   `}
@@ -322,13 +362,13 @@ const Trap: React.FC<TrapProps> = ({ onComplete, onFail, onSuccessMsg, onSaveAns
             <button
               onClick={triggerTrap}
               disabled={phase !== 'setup'}
-              className={`w-full font-bold py-4 rounded-lg shadow-lg transition-all border flex items-center justify-center gap-2 mt-auto
+              className={`w-full font-bold py-5 rounded-lg shadow-lg transition-all border flex items-center justify-center gap-2 mt-auto text-lg
                 ${phase !== 'setup' ? 'bg-slate-800 text-slate-500 border-slate-700' : 'bg-gradient-to-r from-orange-700 to-red-700 text-white border-orange-500 hover:scale-[1.02] hover:shadow-orange-900/50'}
               `}
             >
               {phase === 'setup' ? (
                   <>
-                    <span className="material-symbols-outlined">play_circle</span> 開始模擬
+                    <span className="material-symbols-outlined text-2xl">play_circle</span> 開始模擬
                   </>
               ) : '模擬進行中...'}
             </button>
@@ -399,51 +439,51 @@ const Trap: React.FC<TrapProps> = ({ onComplete, onFail, onSuccessMsg, onSaveAns
             </div>
 
             {/* HUD Status */}
-            <div className="absolute top-4 left-4 font-mono text-xs bg-black/60 px-3 py-2 rounded border-l-2 border-orange-500 text-orange-100 backdrop-blur-md z-30">
-                <div className="text-orange-500 font-bold mb-1">SYSTEM STATUS</div>
-                <div>{statusText}</div>
+            <div className="absolute top-4 left-4 font-mono text-sm bg-black/60 px-4 py-2 rounded border-l-2 border-orange-500 text-orange-100 backdrop-blur-md z-30">
+                <div className="text-orange-500 font-bold mb-1 text-xs">SYSTEM STATUS</div>
+                <div className="font-bold">{statusText}</div>
             </div>
 
             {/* --- DIAGRAM OVERLAY (Phase 3) --- */}
             {phase === 'diagram' && (
                 <div className="absolute inset-0 bg-slate-900/95 backdrop-blur-md z-40 animate-[fadeIn_0.5s_ease-out] flex flex-col p-6 overflow-y-auto">
-                    <h3 className="text-xl font-bold text-white mb-4 border-b-2 border-orange-500 pb-2 text-center shrink-0">科學解構：Rangay</h3>
+                    <h3 className="text-2xl font-bold text-white mb-6 border-b-2 border-orange-500 pb-2 text-center shrink-0">科學解構：Rangay</h3>
                     
-                    <div className="flex-grow flex flex-col md:flex-row items-center justify-center gap-6">
+                    <div className="flex-grow flex flex-col md:flex-row items-center justify-center gap-8">
                         {/* Diagram Illustration */}
                         <div className="relative w-full md:w-1/2 aspect-[4/3] bg-slate-800 rounded-lg border border-slate-600 p-4 shadow-xl shrink-0">
                             {/* Lines */}
-                            <div className="absolute bottom-4 left-4 w-6 h-6 bg-white rounded-full flex items-center justify-center text-black font-bold text-xs z-10 shadow-lg">支</div>
+                            <div className="absolute bottom-4 left-4 w-8 h-8 bg-white rounded-full flex items-center justify-center text-black font-bold text-sm z-10 shadow-lg">支</div>
                             <div className="absolute bottom-4 left-8 w-[80%] h-1 bg-white origin-left -rotate-12"></div>
-                            <div className="absolute bottom-16 left-[40%] w-16 h-12 bg-orange-500/50 border border-orange-400 flex items-center justify-center text-white text-xs backdrop-blur-sm">
+                            <div className="absolute bottom-16 left-[40%] w-20 h-16 bg-orange-500/50 border border-orange-400 flex items-center justify-center text-white text-sm font-bold backdrop-blur-sm">
                                 重物 (m)
                             </div>
                             <div className="absolute bottom-0 w-full h-px bg-slate-500 border-t border-dashed"></div>
                             
                             {/* Force Label */}
-                            <div className="absolute bottom-4 right-[10%] text-cyan-400 font-mono text-xs font-bold">
+                            <div className="absolute bottom-4 right-[10%] text-cyan-400 font-mono text-base font-bold">
                                 ↓ F (衝擊)
                             </div>
                         </div>
 
                         {/* Text Explanation */}
-                        <div className="space-y-3 text-left w-full md:w-1/2">
-                            <div className="bg-slate-800 px-3 py-2 rounded border-l-4 border-orange-500 text-orange-100 text-xs shadow-lg">
-                                <span className="block font-bold mb-1">重力位能 (Potential Energy)</span>
-                                <span className="font-mono">Ug = mgh</span>
-                                <p className="text-slate-400 mt-1">高度與重量決定了陷阱的能量上限。</p>
+                        <div className="space-y-4 text-left w-full md:w-1/2">
+                            <div className="bg-slate-800 px-4 py-3 rounded border-l-4 border-orange-500 text-orange-100 shadow-lg">
+                                <span className="block font-bold mb-1 text-base">重力位能 (Potential Energy)</span>
+                                <span className="font-mono text-sm">Ug = mgh</span>
+                                <p className="text-slate-400 mt-1 text-sm">高度與重量決定了陷阱的能量上限。</p>
                             </div>
-                            <div className="bg-slate-800 px-3 py-2 rounded border-l-4 border-cyan-500 text-cyan-100 text-xs shadow-lg">
-                                <span className="block font-bold mb-1">衝量 (Impulse)</span>
-                                <span className="font-mono">J = F × Δt</span>
-                                <p className="text-slate-400 mt-1">硬碰硬：接觸時間 (Δt) 越短，衝擊力 (F) 越大。</p>
+                            <div className="bg-slate-800 px-4 py-3 rounded border-l-4 border-cyan-500 text-cyan-100 shadow-lg">
+                                <span className="block font-bold mb-1 text-base">衝量 (Impulse)</span>
+                                <span className="font-mono text-sm">J = F × Δt</span>
+                                <p className="text-slate-400 mt-1 text-sm">硬碰硬：接觸時間 (Δt) 越短，衝擊力 (F) 越大。</p>
                             </div>
                         </div>
                     </div>
 
                     <button 
                         onClick={() => setPhase('dialogue')}
-                        className="mt-4 w-full py-3 bg-emerald-700 hover:bg-emerald-600 text-white rounded-full font-bold shadow-lg flex items-center justify-center gap-2 shrink-0 transition-transform active:scale-95"
+                        className="mt-6 w-full py-4 bg-emerald-700 hover:bg-emerald-600 text-white rounded-full font-bold shadow-lg flex items-center justify-center gap-2 shrink-0 transition-transform active:scale-95 text-lg"
                     >
                         進入傳承對話 <span className="material-symbols-outlined">arrow_forward</span>
                     </button>
@@ -458,30 +498,30 @@ const Trap: React.FC<TrapProps> = ({ onComplete, onFail, onSuccessMsg, onSaveAns
         <div className="animate-[slideUp_0.5s_ease-out] bg-slate-900 border-2 border-amber-700/50 rounded-xl overflow-hidden max-w-4xl mx-auto shadow-2xl">
             <div className="grid grid-cols-1 md:grid-cols-2">
                 {/* Left: Tradition */}
-                <div className="p-8 bg-amber-900/20 border-b md:border-b-0 md:border-r border-amber-800/50 flex flex-col justify-center relative">
+                <div className="p-10 bg-amber-900/20 border-b md:border-b-0 md:border-r border-amber-800/50 flex flex-col justify-center relative">
                     <div className="absolute top-4 left-4 text-amber-500/30 text-6xl font-serif opacity-20">VUVU</div>
                     <div className="relative z-10">
-                        <h3 className="text-xl font-bold text-amber-500 mb-4 flex items-center gap-2">
-                            <span className="material-symbols-outlined">face</span> Basan 爺爺的智慧
+                        <h3 className="text-2xl font-bold text-amber-500 mb-6 flex items-center gap-2">
+                            <span className="material-symbols-outlined text-3xl">face</span> Basan 爺爺的智慧
                         </h3>
-                        <blockquote className="text-amber-100 italic text-lg leading-relaxed border-l-4 border-amber-600 pl-4 mb-4">
+                        <blockquote className="text-amber-100 italic text-xl leading-relaxed border-l-4 border-amber-600 pl-6 mb-4">
                             「不能太高，因為掉下來太慢獵物會跑掉；也不能太低，打不暈山豬。」
                         </blockquote>
                     </div>
                 </div>
 
                 {/* Right: Science */}
-                <div className="p-8 bg-slate-800/50 flex flex-col justify-center relative">
+                <div className="p-10 bg-slate-800/50 flex flex-col justify-center relative">
                     <div className="absolute top-4 right-4 text-cyan-500/30 text-6xl font-mono opacity-20">PHYSICS</div>
                     <div className="relative z-10">
-                        <h3 className="text-xl font-bold text-cyan-400 mb-4 flex items-center gap-2">
-                            <span className="material-symbols-outlined">science</span> 科學的語言
+                        <h3 className="text-2xl font-bold text-cyan-400 mb-6 flex items-center gap-2">
+                            <span className="material-symbols-outlined text-3xl">science</span> 科學的語言
                         </h3>
-                        <ul className="space-y-4 text-slate-300 text-sm">
-                            <li className="flex gap-3">
-                                <span className="text-cyan-500 font-bold">●</span>
+                        <ul className="space-y-6 text-slate-300 text-base">
+                            <li className="flex gap-4">
+                                <span className="text-cyan-500 font-bold text-lg">●</span>
                                 <span>
-                                    <strong className="text-white block">最佳化 (Optimization)</strong>
+                                    <strong className="text-white block text-lg mb-2">最佳化 (Optimization)</strong>
                                     爺爺所說的「不能太高，對應了物理上的權衡：高度雖增加能量，但也增加了掉落時間。
                                 </span>
                             </li>
@@ -490,10 +530,10 @@ const Trap: React.FC<TrapProps> = ({ onComplete, onFail, onSuccessMsg, onSaveAns
                 </div>
             </div>
             
-            <div className="p-4 bg-black/40 text-center border-t border-slate-700">
+            <div className="p-6 bg-black/40 text-center border-t border-slate-700">
                 <button 
                     onClick={() => setPhase('task')}
-                    className="px-10 py-3 bg-gradient-to-r from-amber-700 to-orange-600 hover:from-amber-600 hover:to-orange-500 text-white font-bold rounded shadow-lg transform transition hover:-translate-y-1"
+                    className="px-12 py-4 bg-gradient-to-r from-amber-700 to-orange-600 hover:from-amber-600 hover:to-orange-500 text-white font-bold rounded shadow-lg transform transition hover:-translate-y-1 text-lg"
                 >
                     前往實驗設計任務
                 </button>
@@ -503,19 +543,18 @@ const Trap: React.FC<TrapProps> = ({ onComplete, onFail, onSuccessMsg, onSaveAns
 
       {/* PHASE 4: TASK */}
       {phase === 'task' && (
-        <div className="animate-[fadeIn_0.5s_ease-out] bg-slate-900 border border-slate-700 rounded-xl p-8 max-w-3xl mx-auto shadow-2xl relative">
-            <div className="text-center mb-8">
-                <h3 className="text-2xl font-bold text-white mb-2">獵人筆記：定義變因</h3>
-                <p className="text-orange-400 text-sm font-bold">根據你的研究主題，試著將剛剛的觀察轉化為符合你研究的實驗設計</p>
+        <div className="animate-[fadeIn_0.5s_ease-out] bg-slate-900 border border-slate-700 rounded-xl p-10 max-w-4xl mx-auto shadow-2xl relative">
+            <div className="text-center mb-10">
+                <h3 className="text-3xl font-bold text-white mb-3">獵人筆記：定義變因</h3>
+                <p className="text-orange-400 text-base font-bold">根據你的研究主題，試著將剛剛的觀察轉化為符合你研究的實驗設計</p>
             </div>
 
-            {/* Research Topic Section */}
-            <div className="mb-8">
-                <label className="block text-slate-300 text-sm font-bold mb-2">你的研究主題 (Research Topic)</label>
-                <div className="flex gap-2">
+            <div className="mb-10">
+                <label className="block text-slate-300 text-base font-bold mb-3">你的研究主題 (Research Topic)</label>
+                <div className="flex gap-3">
                     <input 
                         type="text" 
-                        className="flex-grow bg-slate-800 border border-slate-600 rounded p-3 text-white focus:border-amber-500 outline-none transition-all placeholder:text-slate-600"
+                        className="flex-grow bg-slate-800 border border-slate-600 rounded p-4 text-white text-lg focus:border-amber-500 outline-none transition-all placeholder:text-slate-600"
                         placeholder="例如：改良原住民陷阱的機械結構"
                         value={researchTopic}
                         onChange={(e) => setResearchTopic(e.target.value)}
@@ -523,7 +562,7 @@ const Trap: React.FC<TrapProps> = ({ onComplete, onFail, onSuccessMsg, onSaveAns
                     <button 
                         onClick={handleAiAssist}
                         disabled={isAiLoading}
-                        className={`px-4 py-2 rounded font-bold text-sm flex items-center gap-2 whitespace-nowrap transition-all border
+                        className={`px-6 py-4 rounded font-bold text-base flex items-center gap-2 whitespace-nowrap transition-all border
                             ${isAiLoading 
                                 ? 'bg-slate-700 text-slate-500 border-slate-600 cursor-wait' 
                                 : 'bg-cyan-900/50 hover:bg-cyan-800 border-cyan-500 text-cyan-300 shadow-[0_0_10px_rgba(6,182,212,0.2)] hover:shadow-cyan-500/40'}
@@ -539,96 +578,114 @@ const Trap: React.FC<TrapProps> = ({ onComplete, onFail, onSuccessMsg, onSaveAns
                 </div>
             </div>
 
-            {/* AI Suggestion Dialog Overlay (remains same) */}
-            {aiSuggestion && (
-                <div className="absolute inset-0 z-20 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-[fadeIn_0.2s_ease-out] rounded-xl">
-                    <div className="bg-slate-900 border-2 border-cyan-500 rounded-xl p-6 w-full max-w-md shadow-[0_0_30px_rgba(6,182,212,0.3)] relative">
-                        <button 
-                            onClick={() => setAiSuggestion(null)}
-                            className="absolute top-4 right-4 text-slate-500 hover:text-white"
-                        >
-                            <span className="material-symbols-outlined">close</span>
-                        </button>
-
-                        <div className="flex items-center gap-3 mb-6 border-b border-cyan-900/50 pb-4">
-                            <span className="material-symbols-outlined text-cyan-400 text-3xl">psychology</span>
-                            <h3 className="text-xl font-bold text-cyan-100">希卡導師的建議</h3>
-                        </div>
-
-                        <div className="space-y-4 text-left">
-                            <div>
-                                <span className="text-orange-400 text-xs font-bold block mb-1">建議操縱變因</span>
-                                <p className="text-slate-300 bg-slate-800 p-2 rounded border border-slate-700 text-sm">{aiSuggestion.independent}</p>
-                            </div>
-                            <div>
-                                <span className="text-cyan-400 text-xs font-bold block mb-1">建議應變變因</span>
-                                <p className="text-slate-300 bg-slate-800 p-2 rounded border border-slate-700 text-sm">{aiSuggestion.dependent}</p>
-                            </div>
-                            <div>
-                                <span className="text-emerald-400 text-xs font-bold block mb-1">建議控制變因</span>
-                                <p className="text-slate-300 bg-slate-800 p-2 rounded border border-slate-700 text-sm">{aiSuggestion.control}</p>
-                            </div>
-                        </div>
-
-                        <div className="mt-8 flex justify-end">
-                            <button 
-                                onClick={() => setAiSuggestion(null)}
-                                className="px-6 py-2 rounded bg-cyan-700 hover:bg-cyan-600 text-white font-bold shadow-lg transition-colors flex items-center justify-center gap-2 text-sm"
-                            >
-                                <span className="material-symbols-outlined text-sm">edit</span>
-                                關閉 (自行填寫)
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
-
-            <div className="space-y-6">
-                <div className="bg-slate-800 p-4 rounded-lg border-l-4 border-orange-500">
-                    <label className="block text-orange-400 font-bold mb-1 text-sm">操縱變因 (Independent Variable)</label>
-                    <p className="text-xs text-slate-500 mb-2">你想改變且測試的唯一條件 (例如：石頭的重量)</p>
+            <div className="space-y-8">
+                <div className="bg-slate-800 p-6 rounded-lg border-l-4 border-orange-500">
+                    <label className="block text-orange-400 font-bold mb-2 text-base">操縱變因 (Independent Variable)</label>
+                    <p className="text-sm text-slate-500 mb-3">你想改變且測試的唯一條件 (例如：石頭的重量)</p>
                     <input 
                         type="text" 
-                        className="w-full bg-slate-900 border border-slate-600 rounded p-2 text-white focus:border-orange-500 outline-none transition-colors"
+                        className="w-full bg-slate-900 border border-slate-600 rounded p-3 text-white focus:border-orange-500 outline-none transition-colors text-base"
                         placeholder="在此輸入..."
                         value={independentVar}
                         onChange={(e) => setIndependentVar(e.target.value)}
                     />
                 </div>
 
-                <div className="bg-slate-800 p-4 rounded-lg border-l-4 border-cyan-500">
-                    <label className="block text-cyan-400 font-bold mb-1 text-sm">應變變因 (Dependent Variable)</label>
-                    <p className="text-xs text-slate-500 mb-2">因操縱變因改變而產生的結果 (例如：陷阱的衝擊力)</p>
+                <div className="bg-slate-800 p-6 rounded-lg border-l-4 border-cyan-500">
+                    <label className="block text-cyan-400 font-bold mb-2 text-base">應變變因 (Dependent Variable)</label>
+                    <p className="text-sm text-slate-500 mb-3">因操縱變因改變而產生的結果 (例如：陷阱的衝擊力)</p>
                     <input 
                         type="text" 
-                        className="w-full bg-slate-900 border border-slate-600 rounded p-2 text-white focus:border-cyan-500 outline-none transition-colors"
+                        className="w-full bg-slate-900 border border-slate-600 rounded p-3 text-white focus:border-cyan-500 outline-none transition-colors text-base"
                         placeholder="在此輸入..."
                         value={dependentVar}
                         onChange={(e) => setDependentVar(e.target.value)}
                     />
                 </div>
 
-                <div className="bg-slate-800 p-4 rounded-lg border-l-4 border-emerald-500">
-                    <label className="block text-emerald-400 font-bold mb-1 text-sm">控制變因 (Control Variables)</label>
-                    <p className="text-xs text-slate-500 mb-2">必須保持不變的條件 (例如：繩索材質、懸掛高度...)</p>
+                <div className="bg-slate-800 p-6 rounded-lg border-l-4 border-emerald-500">
+                    <label className="block text-emerald-400 font-bold mb-2 text-base">控制變因 (Control Variables)</label>
+                    <p className="text-sm text-slate-500 mb-3">必須保持不變的條件 (例如：繩索材質、懸掛高度...)</p>
                     <input 
                         type="text" 
-                        className="w-full bg-slate-900 border border-slate-600 rounded p-2 text-white focus:border-emerald-500 outline-none transition-colors"
+                        className="w-full bg-slate-900 border border-slate-600 rounded p-3 text-white focus:border-emerald-500 outline-none transition-colors text-base"
                         placeholder="在此輸入..."
                         value={controlVar}
                         onChange={(e) => setControlVar(e.target.value)}
                     />
                 </div>
 
-                <div className="flex justify-end pt-4">
+                <div className="flex justify-end pt-6">
                     <button 
                         onClick={submitTask}
-                        className="px-8 py-3 bg-gradient-to-r from-orange-600 to-red-600 text-white font-bold rounded hover:shadow-lg transition-all transform hover:translate-y-[-2px]"
+                        className="px-10 py-4 bg-gradient-to-r from-orange-600 to-red-600 text-white font-bold rounded hover:shadow-lg transition-all transform hover:translate-y-[-2px] text-lg"
                     >
                         提交實驗計畫
                     </button>
                 </div>
             </div>
+            
+            {/* --- AI PROPOSAL MODAL POPUP --- */}
+            {showAiModal && aiResult && (
+                <div className="fixed inset-0 z-[100] bg-black/90 backdrop-blur-sm flex items-center justify-center p-4">
+                    <div className="bg-slate-900 border-2 border-cyan-500 rounded-xl p-8 max-w-4xl w-full shadow-[0_0_50px_rgba(6,182,212,0.3)] animate-[scaleIn_0.3s_ease-out] relative max-h-[90vh] overflow-y-auto">
+                        
+                        {/* Header */}
+                        <div className="flex items-center gap-4 mb-6 border-b border-cyan-900/50 pb-4">
+                            <div className="p-3 bg-cyan-900/30 rounded-full border border-cyan-500/50">
+                                <span className="material-symbols-outlined text-4xl text-cyan-400">psychology</span>
+                            </div>
+                            <div>
+                                <h3 className="text-3xl font-bold text-cyan-400 font-serif">希卡導師分析報告</h3>
+                                <p className="text-cyan-500/60 text-xs uppercase tracking-widest mt-1">Sheikah Mentor Analysis</p>
+                            </div>
+                        </div>
+
+                        {/* Proposal Content */}
+                        <div className="mb-8 bg-slate-800/50 p-6 rounded-lg border border-slate-700/50">
+                            <h4 className="text-cyan-300 font-bold mb-3 flex items-center gap-2">
+                                <span className="material-symbols-outlined">description</span> 研究構想建議
+                            </h4>
+                            <p className="text-slate-300 leading-relaxed text-base whitespace-pre-wrap font-serif">
+                                {aiResult.proposal}
+                            </p>
+                        </div>
+
+                        {/* Variables Grid */}
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+                            <div className="bg-slate-800/80 p-5 rounded border-l-4 border-orange-500">
+                                <span className="text-orange-500 text-xs font-bold uppercase block mb-1">操縱變因 (INDEPENDENT VAR)</span>
+                                <h5 className="text-white font-bold text-lg">{aiResult.independent}</h5>
+                            </div>
+                            <div className="bg-slate-800/80 p-5 rounded border-l-4 border-cyan-500">
+                                <span className="text-cyan-500 text-xs font-bold uppercase block mb-1">應變變因 (DEPENDENT VAR)</span>
+                                <h5 className="text-white font-bold text-lg">{aiResult.dependent}</h5>
+                            </div>
+                            <div className="bg-slate-800/80 p-5 rounded border-l-4 border-emerald-500">
+                                <span className="text-emerald-500 text-xs font-bold uppercase block mb-1">控制變因 (CONTROL VAR)</span>
+                                <h5 className="text-white font-bold text-lg">{aiResult.control}</h5>
+                            </div>
+                        </div>
+
+                        {/* Actions */}
+                        <div className="flex gap-4 justify-end border-t border-slate-800 pt-6">
+                            <button 
+                                onClick={() => setShowAiModal(false)}
+                                className="px-6 py-3 text-slate-400 hover:text-white font-bold transition-colors"
+                            >
+                                取消
+                            </button>
+                            <button 
+                                onClick={applyAiResult}
+                                className="px-8 py-3 bg-cyan-700 hover:bg-cyan-600 text-white font-bold rounded shadow-lg flex items-center gap-2 transition-transform hover:scale-105"
+                            >
+                                <span className="material-symbols-outlined">edit_note</span>
+                                寫入希卡石板 (填入變因)
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
       )}
     </div>
