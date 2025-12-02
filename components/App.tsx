@@ -54,7 +54,6 @@ const App: React.FC = () => {
     // @ts-ignore
     const levelAssets = ASSETS[levelId];
     if (levelAssets && typeof levelAssets === 'object') {
-      // Fix: Use unknown type for the value to match Object.values return type, then cast to string
       Object.values(levelAssets).forEach((value: unknown) => {
         const url = value as string;
         const img = new Image();
