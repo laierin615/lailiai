@@ -1,6 +1,5 @@
 
 import React, { useState } from 'react';
-import { ASSETS } from '../../constants';
 
 interface RattanProps {
   onComplete: () => void;

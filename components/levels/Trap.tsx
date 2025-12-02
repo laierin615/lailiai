@@ -1,7 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
 import { GoogleGenAI, Type } from "@google/genai";
-import { ASSETS } from '../../constants';
 
 interface TrapProps {
   onComplete: () => void;
@@ -21,8 +20,8 @@ interface AiSuggestion {
 }
 
 // Custom Boar SVG Icon
-const BoarIcon = ({ className }: { className?: string }) => (
-  <svg viewBox="0 0 100 60" className="w-full h-full" fill="currentColor" stroke="none">
+const BoarIcon = ({ className = "" }: { className?: string }) => (
+  <svg viewBox="0 0 100 60" className={`w-full h-full ${className}`} fill="currentColor" stroke="none">
     <path d="M 85 25 C 80 10 60 5 40 10 C 25 15 10 25 5 35 C 0 45 10 50 15 50 L 20 58 L 30 58 L 30 48 L 60 48 L 60 58 L 70 58 L 75 45 C 85 45 95 35 85 25 Z" />
     <path d="M 88 35 L 95 30" stroke="white" strokeWidth="3" strokeLinecap="round" />
     <circle cx="75" cy="22" r="2" fill="white" />

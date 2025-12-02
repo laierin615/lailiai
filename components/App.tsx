@@ -1,21 +1,23 @@
 
 import React, { useState, useEffect, useRef } from 'react';
-import Header from './components/Header';
-import Login from './components/Login';
-import MapHub from './components/MapHub';
-import Guide from './components/Guide';
-import Prologue from './components/levels/Prologue';
-import Taxonomy from './components/levels/Taxonomy';
-import Trap from './components/levels/Trap';
-import Granary from './components/levels/Granary';
-import Dye from './components/levels/Dye';
-import River from './components/levels/River';
-import Final from './components/levels/Final';
+import Header from './Header';
+import Login from './Login';
+import MapHub from './MapHub';
+import Guide from './Guide';
+import Prologue from './levels/Prologue';
+import Taxonomy from './levels/Taxonomy';
+import Trap from './levels/Trap';
+import Granary from './levels/Granary';
+import Dye from './levels/Dye';
+import River from './levels/River';
+import Kuba from './levels/Kuba';
+import Rattan from './levels/Rattan';
+import Final from './levels/Final';
 
-import Modal from './components/ui/Modal';
-import EduModal from './components/ui/EduModal';
-import { EDU_DATA, INITIAL_GAME_STATE, ASSETS } from './constants';
-import { GameState, LevelId, ModalState, EduModalState, ScoreState, LevelAnswers } from './types';
+import Modal from './ui/Modal';
+import EduModal from './ui/EduModal';
+import { EDU_DATA, INITIAL_GAME_STATE, ASSETS } from '../constants';
+import { GameState, LevelId, ModalState, EduModalState, ScoreState, LevelAnswers } from '../types';
 
 const App: React.FC = () => {
   const [currentStage, setCurrentStage] = useState<'login' | 'map' | 'guide' | 'level'>('login');
@@ -52,9 +54,10 @@ const App: React.FC = () => {
     // @ts-ignore
     const levelAssets = ASSETS[levelId];
     if (levelAssets && typeof levelAssets === 'object') {
-      Object.values(levelAssets).forEach((url: string) => {
+      Object.values(levelAssets).forEach((url) => {
+        const src = url as string;
         const img = new Image();
-        img.src = url;
+        img.src = src;
       });
     }
   };
@@ -68,14 +71,15 @@ const App: React.FC = () => {
 
   const handleSaveAnswer = (levelId: LevelId, answer: string) => {
     console.log(`Saving answer for ${levelId}:`, answer);
-    setLevelAnswers(prev => ({
+    setLevelAnswers((prev: LevelAnswers) => ({
       ...prev,
       [levelId]: answer
     }));
   };
 
   const submitGameData = (finalGameState: GameState, finalScores: ScoreState, finalAnswers: LevelAnswers) => {
-    const url = "https://script.google.com/macros/s/AKfycbzRnc2oA36mAyOu1dJsQ8qAH6lWDh0OX6RjftugEOwkD6zPCGkoCMZHn2LYv9bftCyb5w/exec";
+    // Updated URL to the correct V1 deployment
+    const url = "https://script.google.com/macros/s/AKfycbzEh4PPNpjGtplNksaBduNRtI0f8MfwKeigUkcr8Bc-dNG4Icmh7hNiSavuMSar6VCk6A/exec";
     
     // Calculate total score
     const totalScore = (Object.values(finalScores) as number[]).reduce((a, b) => a + b, 0);
@@ -153,7 +157,8 @@ const App: React.FC = () => {
   const handleLevelComplete = (id: LevelId) => {
     let newScores = { ...scores };
     
-    if (id !== 'prologue') {
+    // Side levels (Kuba, Rattan) are not scored
+    if (id !== 'prologue' && id !== 'kuba' && id !== 'rattan') {
       if (!scores[id]) {
         newScores = { ...scores, [id]: calculateScore() };
         setScores(newScores);
@@ -204,6 +209,7 @@ const App: React.FC = () => {
       onSuccessMsg: handleLevelSuccessMsg,
       onComplete: () => handleLevelComplete(currentLevelId as LevelId),
       onSaveAnswer: (ans: string) => handleSaveAnswer(currentLevelId as LevelId, ans),
+      initialAnswer: currentLevelId ? levelAnswers[currentLevelId] : undefined,
     };
 
     switch (currentLevelId) {
@@ -213,6 +219,8 @@ const App: React.FC = () => {
       case 'granary': return <Granary {...commonProps} />;
       case 'dye': return <Dye {...commonProps} />;
       case 'river': return <River {...commonProps} />;
+      case 'kuba': return <Kuba {...commonProps} />;
+      case 'rattan': return <Rattan {...commonProps} />;
       
       case 'final': return <Final 
           {...commonProps} 

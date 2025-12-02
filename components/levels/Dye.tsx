@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 
 interface DyeProps {
   onComplete: () => void;
@@ -20,7 +20,7 @@ const INGREDIENTS: { id: Ingredient; name: string; icon: string; desc: string; c
   { id: 'acid', name: '酸性果實', icon: 'nutrition', desc: '顯影劑', color: 'text-yellow-400' },
 ];
 
-const Dye: React.FC<DyeProps> = ({ onComplete, onFail, onSuccessMsg, onSaveAnswer }) => {
+const Dye: React.FC<DyeProps> = ({ onComplete, onSuccessMsg, onSaveAnswer }) => {
   const [phase, setPhase] = useState<Phase>('puzzle');
   const [puzzleStage, setPuzzleStage] = useState<PuzzleStage>(1);
   const [pot, setPot] = useState<Ingredient[]>([]);
@@ -312,4 +312,3 @@ const Dye: React.FC<DyeProps> = ({ onComplete, onFail, onSuccessMsg, onSaveAnswe
 };
 
 export default Dye;
-    

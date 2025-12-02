@@ -12,7 +12,7 @@ interface FinalProps {
   initialAnswer?: string;
 }
 
-const Final: React.FC<FinalProps> = ({ onComplete, onFail, onSuccessMsg, onSaveAnswer, levelAnswers, initialAnswer }) => {
+const Final: React.FC<FinalProps> = ({ onComplete, onSaveAnswer, levelAnswers, initialAnswer }) => {
   const [isGenerating, setIsGenerating] = useState(false);
   const [proposal, setProposal] = useState("");
   

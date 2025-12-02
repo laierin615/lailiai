@@ -1,7 +1,6 @@
 
 import React from 'react';
 import { GameState, LevelId } from '../types';
-import { ASSETS } from '../constants';
 
 interface MapHubProps {
   gameState: GameState;
@@ -11,7 +10,6 @@ interface MapHubProps {
 
 // Internal Component for the Shrine Node
 const ShrineNode = ({ 
-  id, 
   title, 
   subtitle, 
   icon, 
